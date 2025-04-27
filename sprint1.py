@@ -1,56 +1,11 @@
 import pygame
 import sys
 import time  # For tracking effect durations
+from game_config import GAME_CONFIG, COLORS
+from ai_player import AIPlayer
 
 # Initialize Pygame - this is required before using any Pygame functions
 pygame.init()
-
-# Game configuration - all game settings are stored here for easy modification
-GAME_CONFIG = {
-    'tile_size_in_pixels': 20,      # Size of one tile in pixels
-    'tiles_width': 40,    # Width of the game board in tiles
-    'tiles_height': 20,   # Height of the game board in tiles
-    'stats_panel_height_in_pixels': 100,  # Height of the stats panel in pixels
-    'player_speed': 5,    # Player movement speed in tiles per second
-    'fps': 60,           # Frames per second - controls game smoothness
-    
-    # Shooting configuration
-    'fire_rate': 5,              # shots per second
-    'projectile_speed': 50,      # tiles per second
-    'projectile_size': 1,        # in tiles
-    'projectile_color': (0,0,0), # RGB tuple
-    'slow_factor': 0.5,          # target speed multiplier
-    'slow_duration': 2.0,        # seconds
-    'speedup_factor': 1.5,       # shooter speed multiplier
-    'speedup_duration': 1.0,     # seconds
-    
-    # Shield configuration
-    'shield_boost_duration': 4.0,  # seconds
-    'shield_boost_amount': 0.05,   # 5% speed boost per block
-    'shield_boost_max': 0.5,       # maximum 50% total boost
-    
-    # Round configuration
-    'rounds_to_win': 3,          # First to X rounds wins the match
-    'countdown_seconds': 3,       # Countdown starts from this number
-    'countdown_duration': 1.5,    # Total duration of countdown sequence in seconds
-}
-
-# Calculate window dimensions in pixels based on tile counts
-GAME_CONFIG['window_width_in_pixels'] = GAME_CONFIG['tiles_width'] * GAME_CONFIG['tile_size_in_pixels']
-GAME_CONFIG['window_height_in_pixels'] = (GAME_CONFIG['tiles_height'] * GAME_CONFIG['tile_size_in_pixels'] + 
-                                        GAME_CONFIG['stats_panel_height_in_pixels'])
-
-# Colors used in the game - defined as RGB tuples
-COLORS = {
-    'background': (255, 255, 255),  # White
-    'center_line': (0, 0, 0),       # Black
-    'player1': (255, 0, 0),         # Red
-    'player2': (0, 0, 255),         # Blue
-    'stats_panel': (240, 240, 240), # Light gray
-    'progress_bar_bg': (200, 200, 200),  # Darker gray
-    'progress_bar_fill': (0, 150, 0),    # Green
-    'text': (0, 0, 0)               # Black
-}
 
 # Create the game window
 screen = pygame.display.set_mode((GAME_CONFIG['window_width_in_pixels'], GAME_CONFIG['window_height_in_pixels']))
@@ -61,6 +16,9 @@ clock = pygame.time.Clock()
 
 # Initialize font for text rendering
 font = pygame.font.Font(None, 32)  # Increased font size for better visibility
+
+# Add this after the imports
+AI_ENABLED = True  # Set to False to disable AI control
 
 class Projectile:
     def __init__(self, x, y, direction):
@@ -274,14 +232,14 @@ class GameState:
         self.match_over = False
         self.round_over = False
         self.countdown_active = True
-        self.countdown_time = GAME_CONFIG['countdown_seconds']
+        self.countdown_ticks = GAME_CONFIG['countdown_ticks']
         self.last_countdown_update = time.time()
     
     def reset_round(self):
         """Reset for a new round"""
         self.round_over = False
         self.countdown_active = True
-        self.countdown_time = GAME_CONFIG['countdown_seconds']
+        self.countdown_ticks = GAME_CONFIG['countdown_ticks']
         self.last_countdown_update = time.time()
     
     def update_countdown(self, current_time):
@@ -289,9 +247,9 @@ class GameState:
         if self.countdown_active:
             # 4 steps total (3,2,1,GO), so divide total duration by 4
             if current_time - self.last_countdown_update >= GAME_CONFIG['countdown_duration'] / 4:
-                self.countdown_time -= 1
+                self.countdown_ticks -= 1
                 self.last_countdown_update = current_time
-                if self.countdown_time < 0:
+                if self.countdown_ticks < 0:
                     self.countdown_active = False
                     return True
         return False
@@ -629,8 +587,8 @@ def draw_countdown():
     
     # Draw countdown number or "GO!" in white
     countdown_font = pygame.font.Font(None, window_height // 4)  # Much larger font for countdown
-    if game_state.countdown_time > 0:
-        text = str(game_state.countdown_time)
+    if game_state.countdown_ticks > 0:
+        text = str(game_state.countdown_ticks)
     else:
         text = "GO!"
     
@@ -647,13 +605,17 @@ def reset_players():
     player1 = Player(0, GAME_CONFIG['tiles_height'] // 2 - 0.5, COLORS['player1'])
     # Player 2 starts at right center
     player2 = Player(GAME_CONFIG['tiles_width'] - 1, GAME_CONFIG['tiles_height'] // 2 - 0.5, COLORS['player2'])
-    return player1, player2
+    
+    # Create AI controller if enabled
+    ai_controller = AIPlayer(player2, player1) if AI_ENABLED else None
+    
+    return player1, player2, ai_controller
 
 # Main game loop
 running = True
 game_over = False
 winner = None
-player1, player2 = reset_players()
+player1, player2, ai_controller = reset_players()
 
 while running:
     # Calculate delta time in seconds
@@ -670,13 +632,13 @@ while running:
                     game_state.reset_match()
                     game_over = False
                     winner = None
-                    player1, player2 = reset_players()
+                    player1, player2, ai_controller = reset_players()
             elif game_state.round_over:
                 if event.key == pygame.K_SPACE:  # Start next round
                     game_state.reset_round()
                     game_over = False
                     winner = None
-                    player1, player2 = reset_players()
+                    player1, player2, ai_controller = reset_players()
             else:
                 # Handle shooting
                 if not game_state.countdown_active:
@@ -710,13 +672,17 @@ while running:
         dx1 = (keys[pygame.K_d] - keys[pygame.K_a]) * GAME_CONFIG['player_speed']
         dy1 = (keys[pygame.K_s] - keys[pygame.K_w]) * GAME_CONFIG['player_speed']
         
-        # Calculate movement for Player 2 (Arrow keys)
-        dx2 = (keys[pygame.K_RIGHT] - keys[pygame.K_LEFT]) * GAME_CONFIG['player_speed']
-        dy2 = (keys[pygame.K_DOWN] - keys[pygame.K_UP]) * GAME_CONFIG['player_speed']
-        
-        # Move players
+        # Move Player 1
         player1.move(dx1, dy1, dt, current_time, player2)
-        player2.move(dx2, dy2, dt, current_time, player1)
+        
+        # Handle Player 2 movement (either AI or keyboard)
+        if AI_ENABLED and ai_controller:
+            ai_controller.update(dt, current_time)
+        else:
+            # Calculate movement for Player 2 (Arrow keys)
+            dx2 = (keys[pygame.K_RIGHT] - keys[pygame.K_LEFT]) * GAME_CONFIG['player_speed']
+            dy2 = (keys[pygame.K_DOWN] - keys[pygame.K_UP]) * GAME_CONFIG['player_speed']
+            player2.move(dx2, dy2, dt, current_time, player1)
         
         # Check win condition
         if player1.get_progress() >= 100:
