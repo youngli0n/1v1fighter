@@ -4,9 +4,10 @@ from game_config import GAME_CONFIG
 class AIPlayer:
     """AI-controlled player that uses simple heuristics to challenge Player 1"""
     
-    def __init__(self, player2, player1):
+    def __init__(self, player2, player1, walls=None):
         self.player2 = player2
         self.player1 = player1
+        self.walls = walls
         self.last_shot_time = 0
         self.shot_cooldown = 1.0 / GAME_CONFIG['fire_rate']  # Minimum time between shots
         
@@ -42,7 +43,7 @@ class AIPlayer:
             # Apply movement
             self.player2.move(move_x * GAME_CONFIG['player_speed'], 
                             move_y * GAME_CONFIG['player_speed'], 
-                            dt, current_time, self.player1)
+                            dt, current_time, self.player1, self.walls)
         
         # Shooting logic
         if (not self.player2.shield_active and 

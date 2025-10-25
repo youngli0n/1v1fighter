@@ -22,10 +22,21 @@ GAME_CONFIG = {
     'shield_boost_amount': 0.05,   # 5% speed boost per block
     'shield_boost_max': 0.5,       # maximum 50% total boost
     
+    # Wall configuration
+    'walls_enabled': True,         # Set to False to disable walls
+    'num_walls_per_side': 5,       # Number of walls on each player's side
+    'wall_width': 0.5,             # Wall width in tiles (half player size)
+    'wall_height': 3,              # Wall height in tiles (3x player size)
+    'wall_min_distance': 5,        # Minimum distance between walls in tiles
+    'wall_color': (128, 128, 128), # Gray color for walls
+    
     # Round configuration
     'rounds_to_win': 3,          # First to X rounds wins the match
     'countdown_ticks': 3,       # Countdown starts from this number
     'countdown_duration': 2,    # Total duration of countdown sequence in seconds
+    
+    # AI configuration
+    'ai_enabled': False,        # Set to True to enable AI control for Player 2
 }
 
 # Calculate window dimensions in pixels based on tile counts

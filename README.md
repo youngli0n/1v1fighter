@@ -49,7 +49,7 @@ pip install -r requirements.txt
 
 3. Run the game:
 ```bash
-python sprint1.py
+python main.py
 ```
 
 ## Development
