@@ -288,8 +288,10 @@ class Player:
                         reflected_direction, 
                         speed_multiplier=2.0  # 2x speed when reflected
                     )
-                    # Add the reflected projectile to the other player's projectiles
-                    other_player.projectiles.append(reflected_projectile)
+                    # CRITICAL: Add to self.projectiles (the original shooter) so ownership changes correctly
+                    # When it hits the original shooter, self=original_shooter, other_player=blocker
+                    # This way the slowdown/buff are applied correctly
+                    self.projectiles.append(reflected_projectile)
                 else:
                     # Apply effects
                     other_player.apply_effect('slow', GAME_CONFIG['slow_duration'], current_time)
