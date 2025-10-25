@@ -272,31 +272,34 @@ class Player:
             
             # Check for collision with other player
             if projectile.rect.colliderect(other_player.rect):
-                # If other player's shield is active, reflect the projectile back at 2x speed
+                # If other player's shield is active, block the projectile and fire back at 2x speed
                 if other_player.shield_active:
-                    # Give shield boost to the blocker
+                    # Give the blocking player a speed boost
                     other_player.apply_effect('block', GAME_CONFIG['shield_boost_duration'], current_time)
                     
-                    # Remove the original projectile
-                    self.projectiles.remove(projectile)
+                    # Create a deflected projectile that goes back at the attacker
+                    # Direction is reversed (if projectile was going right, deflect left, and vice versa)
+                    deflect_direction = -projectile.direction
                     
-                    # Create a new reflected projectile heading back at 2x speed
-                    reflected_direction = -projectile.direction  # Reverse direction
-                    reflected_projectile = Projectile(
-                        other_player.x, 
-                        other_player.y, 
-                        reflected_direction, 
-                        speed_multiplier=2.0  # 2x speed when reflected
+                    # Spawn deflected projectile at the blocking player's position
+                    from projectile import Projectile
+                    deflected_shot = Projectile(
+                        x=other_player.x + (1 if deflect_direction == 1 else -1),
+                        y=other_player.y,
+                        direction=deflect_direction,
+                        is_deflected=True  # This makes it travel at 2x speed
                     )
-                    # CRITICAL: Add to self.projectiles (the original shooter) so ownership changes correctly
-                    # When it hits the original shooter, self=original_shooter, other_player=blocker
-                    # This way the slowdown/buff are applied correctly
-                    self.projectiles.append(reflected_projectile)
+                    
+                    # Add the deflected shot to the blocking player's projectiles
+                    # This ensures it won't be deflected by the original shooter's shield
+                    other_player.projectiles.append(deflected_shot)
                 else:
-                    # Apply effects
+                    # Apply effects when hit without shield
                     other_player.apply_effect('slow', GAME_CONFIG['slow_duration'], current_time)
                     self.apply_effect('speedup', GAME_CONFIG['speedup_duration'], current_time)
-                    self.projectiles.remove(projectile)
+                
+                # Remove the original projectile (whether deflected or not)
+                self.projectiles.remove(projectile)
     
     def get_progress(self):
         """

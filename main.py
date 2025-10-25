@@ -308,8 +308,7 @@ while running:
         # Draw game objects
         for obj in game_objects:
             obj.draw(screen)
-        
-        # Draw players with shield effect if active
+            # Draw players with shield effect if active
         for player in [player1, player2]:
             if player.shield_active:
                 # Draw shield effect (slightly larger rectangle)

@@ -5,7 +5,7 @@ from game_config import GAME_CONFIG
 class Projectile:
     """Represents a bullet shot by a player"""
     
-    def __init__(self, x, y, direction, speed_multiplier=1.0):
+    def __init__(self, x, y, direction, is_deflected=False):
         """
         Initialize a projectile
         
@@ -13,12 +13,12 @@ class Projectile:
             x: Starting x position (in tiles)
             y: Starting y position (in tiles)
             direction: Direction of travel (1 for P1 going right, -1 for P2 going left)
-            speed_multiplier: Speed multiplier for the projectile (default 1.0)
+            is_deflected: Whether this is a deflected shot (travels 2x speed)
         """
         self.x = float(x)
         self.y = float(y)
         self.direction = direction  # 1 for P1, -1 for P2
-        self.speed_multiplier = speed_multiplier  # Speed multiplier (1.0 = normal, 2.0 = double speed)
+        self.is_deflected = is_deflected
         
         # Create rect for drawing, converting float positions to integers
         self.rect = pygame.Rect(
@@ -35,7 +35,9 @@ class Projectile:
         Args:
             dt: Time delta (in seconds) since last frame
         """
-        self.x += self.direction * GAME_CONFIG['projectile_speed'] * self.speed_multiplier * dt
+        # Deflected shots travel at 2x speed
+        speed_multiplier = 2.0 if self.is_deflected else 1.0
+        self.x += self.direction * GAME_CONFIG['projectile_speed'] * speed_multiplier * dt
         self.rect.x = int(self.x * GAME_CONFIG['tile_size_in_pixels'])
     
     def draw(self, screen):
