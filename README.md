@@ -9,6 +9,8 @@ A fast-paced, competitive two-player racing game where players battle to reach t
 - Shield blocking system with speed boosts
 - Dynamic speed effects and regeneration
 - Real-time stats tracking
+- Dynamic wall obstacles with collision detection
+- AI opponent support (optional)
 
 ## Controls
 
@@ -59,6 +61,7 @@ This project was developed in sprints, with each sprint adding new features:
 - Sprint 2: Stats panel and player information
 - Sprint 3: Shooting mechanics and effects
 - Sprint 4: Shield system and win conditions
+- Sprint 5: Wall obstacles and code refactoring
 
 ## License
 

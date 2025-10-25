@@ -14,6 +14,7 @@ The code has been refactored into separate files for easier understanding:
 - **`game_state.py`** - Contains the GameState class
 - **`game_config.py`** - Contains all game configuration settings
 - **`ai_player.py`** - Contains the AI controller
+- **`wall.py`** - Contains the Wall class for obstacles
 - **`main.py`** - Main game file with game loop
 - **`renderer.py`** - Handles all drawing and rendering operations
 
@@ -108,16 +109,37 @@ Tracks game progression (rounds, matches, countdown).
 
 ---
 
+### 4. **Wall Class** (wall.py)
+Represents wall obstacles that block player and projectile movement.
+
+**Parameters:**
+- `x, y`: Position (in tiles) - bottom edge of wall
+- `width`: Wall width (default 0.5 tiles)
+- `height`: Wall height (default 3 tiles)
+
+**Methods:**
+- `get_tile_bounds()`: Returns the area the wall occupies
+- `overlaps_with(other_wall)`: Checks if this wall overlaps another wall
+- `draw(screen)`: Draws the wall on screen
+
+**Features:**
+- Walls are randomly placed at match start
+- Mirrored on both sides for fair gameplay
+- Have minimum distance requirement (5 tiles) to prevent clustering
+- Block player movement and projectile shots
+
+---
+
 ## Game Flow (Main Loop)
 
 The main game loop in main.py runs every frame:
 
 1. **Calculate time**: `dt = clock.tick(60) / 1000` - time since last frame
 2. **Handle input**: Keyboard events (movement, shooting, shields)
-3. **Update players**: Move them based on input and speed modifiers
-4. **Update bullets**: Move all projectiles and check for hits
+3. **Update players**: Move them based on input and speed modifiers (checking wall collisions)
+4. **Update bullets**: Move all projectiles and check for hits (with players and walls)
 5. **Check win condition**: Has anyone reached 100% progress?
-6. **Draw everything**: Players, bullets, stats panel, UI
+6. **Draw everything**: Walls, players, bullets, stats panel, UI
 7. **Repeat**: Go back to step 1
 
 ---
@@ -166,6 +188,9 @@ The main game loop in main.py runs every frame:
 - `slow_duration`: 2.0 (slow lasts 2 seconds)
 - `speedup_factor`: 1.5 (hitting someone gives 150% speed)
 - `speedup_duration`: 1.0 (speedup lasts 1 second)
+- `walls_enabled`: True (enable/disable wall obstacles)
+- `num_walls_per_side`: 5 (number of walls on each player's side)
+- `wall_min_distance`: 5 (minimum distance between walls in tiles)
 
 ---
 
