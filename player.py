@@ -238,7 +238,7 @@ class Player:
     
     def update_projectiles(self, dt, other_player, current_time, walls=None):
         """
-        Update all projectiles and check for collisions
+        Update all projectiles and check for collisions with sub-stepping for fast projectiles
         
         Args:
             dt: Time delta (in seconds) between frames
@@ -246,60 +246,84 @@ class Player:
             current_time: Current game time
             walls: List of walls to check collision with (optional)
         """
+        # Constants for sub-stepping collision detection
+        MAX_STEP_SIZE = 0.5  # Maximum tiles to move per sub-step (half player size)
+        
         # Update existing projectiles
         for projectile in self.projectiles[:]:
-            projectile.update(dt)
+            # Get movement path with sub-steps
+            start_positions = projectile.get_movement_with_substeps(dt, max_step_size=MAX_STEP_SIZE)
             
-            # Check if projectile is out of bounds
-            if (projectile.x < 0 or 
-                projectile.x > GAME_CONFIG['tiles_width'] or
-                projectile.y < 0 or 
-                projectile.y > GAME_CONFIG['tiles_height']):
-                self.projectiles.remove(projectile)
-                continue
+            collision_detected = False
             
-            # Check for collision with walls
-            hit_wall = False
-            if walls:
-                for wall in walls:
-                    if projectile.rect.colliderect(wall.rect):
-                        self.projectiles.remove(projectile)
-                        hit_wall = True
+            # Check each position along the path for collision
+            for i, (check_x, check_y) in enumerate(start_positions[1:], start=1):  # Skip start position
+                # Temporarily move projectile to this position for collision testing
+                projectile.x = check_x
+                projectile.rect.x = int(projectile.x * GAME_CONFIG['tile_size_in_pixels'])
+                
+                # Check if projectile is out of bounds
+                if (projectile.x < 0 or 
+                    projectile.x > GAME_CONFIG['tiles_width'] or
+                    projectile.y < 0 or 
+                    projectile.y > GAME_CONFIG['tiles_height']):
+                    collision_detected = True
+                    break
+                
+                # Check for collision with walls
+                hit_wall = False
+                if walls:
+                    for wall in walls:
+                        if projectile.rect.colliderect(wall.rect):
+                            collision_detected = True
+                            hit_wall = True
+                            break
+                    
+                    if hit_wall:
                         break
                 
-                if hit_wall:
-                    continue
-            
-            # Check for collision with other player
-            if projectile.rect.colliderect(other_player.rect):
-                # If other player's shield is active, block the projectile and fire back at 2x speed
-                if other_player.shield_active:
-                    # Give the blocking player a speed boost
-                    other_player.apply_effect('block', GAME_CONFIG['shield_boost_duration'], current_time)
+                # Check for collision with other player
+                if projectile.rect.colliderect(other_player.rect):
+                    collision_detected = True
                     
-                    # Create a deflected projectile that goes back at the attacker
-                    # Direction is reversed (if projectile was going right, deflect left, and vice versa)
-                    deflect_direction = -projectile.direction
+                    # If other player's shield is active, block the projectile and fire back at 2x speed
+                    if other_player.shield_active:
+                        # Give the blocking player a speed boost
+                        other_player.apply_effect('block', GAME_CONFIG['shield_boost_duration'], current_time)
+                        
+                        # Create a deflected projectile that goes back at the attacker
+                        # Direction is reversed (if projectile was going right, deflect left, and vice versa)
+                        deflect_direction = -projectile.direction
+                        
+                        # Spawn deflected projectile at the blocking player's position
+                        from projectile import Projectile
+                        deflected_shot = Projectile(
+                            x=other_player.x + (1 if deflect_direction == 1 else -1),
+                            y=other_player.y,
+                            direction=deflect_direction,
+                            is_deflected=True  # This makes it travel at 2x speed
+                        )
+                        
+                        # Add the deflected shot to the blocking player's projectiles
+                        # This ensures it won't be deflected by the original shooter's shield
+                        other_player.projectiles.append(deflected_shot)
+                    else:
+                        # Apply effects when hit without shield
+                        other_player.apply_effect('slow', GAME_CONFIG['slow_duration'], current_time)
+                        self.apply_effect('speedup', GAME_CONFIG['speedup_duration'], current_time)
                     
-                    # Spawn deflected projectile at the blocking player's position
-                    from projectile import Projectile
-                    deflected_shot = Projectile(
-                        x=other_player.x + (1 if deflect_direction == 1 else -1),
-                        y=other_player.y,
-                        direction=deflect_direction,
-                        is_deflected=True  # This makes it travel at 2x speed
-                    )
-                    
-                    # Add the deflected shot to the blocking player's projectiles
-                    # This ensures it won't be deflected by the original shooter's shield
-                    other_player.projectiles.append(deflected_shot)
-                else:
-                    # Apply effects when hit without shield
-                    other_player.apply_effect('slow', GAME_CONFIG['slow_duration'], current_time)
-                    self.apply_effect('speedup', GAME_CONFIG['speedup_duration'], current_time)
+                    break
                 
-                # Remove the original projectile (whether deflected or not)
+                # No collision at this step, move to next position
+                collision_detected = False
+            
+            # Remove projectile if collision detected or update to final position
+            if collision_detected:
                 self.projectiles.remove(projectile)
+            else:
+                # Move projectile to final position (last position in the path)
+                projectile.x = start_positions[-1][0]
+                projectile.rect.x = int(projectile.x * GAME_CONFIG['tile_size_in_pixels'])
     
     def get_progress(self):
         """

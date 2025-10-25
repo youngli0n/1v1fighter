@@ -27,9 +27,12 @@ Represents a bullet shot by a player.
 **Parameters:**
 - `x, y`: Position on the game board (in tiles)
 - `direction`: Which way it moves (1 = right, -1 = left)
+- `is_deflected`: Whether this is a deflected shot (travels 2x speed)
 
 **Methods:**
 - `update(dt)`: Moves the projectile forward each frame
+- `get_speed_multiplier()`: Returns 2.0 for deflected shots, 1.0 for normal shots
+- `get_movement_with_substeps(dt, max_step_size)`: Calculates intermediate positions along the movement path for collision detection (prevents fast projectiles from skipping through objects)
 - `draw(screen)`: Draws it on screen
 
 ---
@@ -68,13 +71,14 @@ Represents one of the two players in the game.
 - **What it does**: Creates a new projectile and adds it to the list, if allowed by fire rate
 
 **`update_projectiles(dt, other_player, current_time)`**
-- **Purpose**: Updates all flying bullets and checks for hits
+- **Purpose**: Updates all flying bullets and checks for hits with sub-stepping collision detection
 - **What it does**:
-  1. Moves all projectiles
-  2. Removes projectiles that go off screen
-  3. Checks if any hit the other player
+  1. Gets movement path with intermediate positions for each projectile
+  2. Checks for collisions at each intermediate position (prevents fast projectiles from tunneling through objects)
+  3. Checks for hits against walls or other player
   4. On hit: slows the target, speeds up the shooter (if not shielded)
-  5. Removes the projectile after hit
+  5. If target has shield active: deflects shot back at attacker at 2x speed
+  6. Removes the projectile after hit
 
 **`get_total_speed_multiplier(current_time)`**
 - **Purpose**: Calculates how fast the player should move
@@ -246,6 +250,43 @@ The main game loop in main.py runs every frame:
 # Position updates: new_x = x + dx * dt * 0.5
 # Player moves at half speed for 2 seconds
 ```
+
+---
+
+## Collision Detection: Sub-Stepping
+
+To prevent fast-moving projectiles from "tunneling" through objects (skipping past them between frames), the game uses **sub-stepping collision detection**.
+
+### The Problem:
+- At 60 FPS, a normal projectile travels ~1.67 tiles per frame
+- A deflected projectile (2x speed) travels ~3.3 tiles per frame
+- If a player is only 1 tile wide, fast projectiles can skip past them!
+
+### The Solution:
+Instead of checking collision only at start and end positions, we:
+1. Calculate intermediate positions along the movement path
+2. Check collision at each intermediate position
+3. Use sub-steps of 0.5 tiles maximum (ensures we detect 1-tile wide objects)
+
+### Implementation:
+```python
+# In update_projectiles():
+MAX_STEP_SIZE = 0.5  # Half player size
+
+# Get path with sub-steps
+positions = projectile.get_movement_with_substeps(dt, MAX_STEP_SIZE)
+
+# Check each position for collision
+for check_x, check_y in positions:
+    if collision_detected(check_x, check_y):
+        handle_collision()
+        break
+```
+
+**Benefits:**
+- No tunneling: catches fast projectiles reliably
+- Efficient: only sub-steps when necessary (slow projectiles don't need it)
+- Industry standard: same approach used in Unity and Unreal engines
 
 ---
 
