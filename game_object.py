@@ -193,7 +193,7 @@ def generate_object(object_type, walls, existing_objects=None, player1_pos=None,
     Generate a random object of a specific type with smart grid-based placement
     
     Args:
-        object_type: String indicating type ('speed_boost', 'speed_debuff', etc.)
+        object_type: String indicating type ('speed_boost', 'speed_buff', etc.)
         walls: List of existing walls to avoid placing objects on
         existing_objects: List of already placed objects to avoid overlapping
         player1_pos: (x, y) tuple of player 1 position
@@ -268,7 +268,7 @@ def generate_objects(walls, num_objects, player1_pos=None, player2_pos=None):
             if random.random() < 0.5:
                 obj = generate_object('speed_boost', walls, objects, player1_pos, player2_pos, 'left')
             else:
-                obj = generate_object('speed_debuff', walls, objects, player1_pos, player2_pos, 'left')
+                obj = generate_object('speed_buff', walls, objects, player1_pos, player2_pos, 'left')
             
             # Must be on the LEFT side (x < center)
             if obj and obj.x < map_center_x:
@@ -327,7 +327,7 @@ def generate_objects(walls, num_objects, player1_pos=None, player2_pos=None):
                     if random.random() < 0.5:
                         obj = SpeedBoostObject(x, y)
                     else:
-                        obj = SpeedDebuffObject(x, y)
+                        obj = SpeedBuffObject(x, y)
                     objects.append(obj)
     
     # Generate objects for RIGHT side (Player 2 area)
@@ -347,7 +347,7 @@ def generate_objects(walls, num_objects, player1_pos=None, player2_pos=None):
             if random.random() < 0.5:
                 obj = generate_object('speed_boost', walls, objects, player1_pos, player2_pos, 'right')
             else:
-                obj = generate_object('speed_debuff', walls, objects, player1_pos, player2_pos, 'right')
+                obj = generate_object('speed_buff', walls, objects, player1_pos, player2_pos, 'right')
             
             # Must be on the RIGHT side (x >= center)
             if obj and obj.x >= map_center_x:
@@ -405,7 +405,7 @@ def generate_objects(walls, num_objects, player1_pos=None, player2_pos=None):
                     if random.random() < 0.5:
                         obj = SpeedBoostObject(x, y)
                     else:
-                        obj = SpeedDebuffObject(x, y)
+                        obj = SpeedBuffObject(x, y)
                     objects.append(obj)
     
     return objects

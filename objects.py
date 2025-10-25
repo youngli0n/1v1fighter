@@ -2,7 +2,7 @@
 
 # Import all object types - this triggers their registration
 import speed_boost_object  # Registers 'speed_boost'
-import speed_debuff_object  # Registers 'speed_debuff'
+import speed_buff_object  # Registers 'speed_buff'
 
 # Add more object imports here as you create them:
 # import pierce_object  # Would register 'pierce'

@@ -1,24 +1,30 @@
-"""Speed Boost Object - Increases player speed"""
+"""Speed Buff Object - Speeds up the player who collects it"""
 from game_object import GameObject, register_object_type
-from game_config import GAME_CONFIG, COLORS
+from game_config import COLORS, GAME_CONFIG
 
 
-class SpeedBoostObject(GameObject):
-    """A collectible object that increases the player's speed"""
+class SpeedBuffObject(GameObject):
+    """
+    A collectible object that increases the player's speed
+    
+    This object speeds up the player who collects it.
+    Multiple collections compound the effect (add more time to the buff).
+    """
     
     def __init__(self, x, y):
         """
-        Initialize a speed boost object
+        Initialize a speed buff object
         
         Args:
             x: X position in tiles
             y: Y position in tiles
         """
-        super().__init__(x, y, COLORS['speed_boost_object'])
+        # Call the parent class's __init__ method
+        super().__init__(x, y, COLORS['speed_debuff_object'])  # Using existing color
     
     def apply_effect(self, player, current_time):
         """
-        Increase the player's speed with compounding effect
+        Increase player speed with compounding effect
         
         Args:
             player: The Player object that collected this
@@ -38,4 +44,4 @@ class SpeedBoostObject(GameObject):
 
 
 # Register this object type
-register_object_type('speed_boost', SpeedBoostObject)
+register_object_type('speed_buff', SpeedBuffObject)

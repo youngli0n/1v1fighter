@@ -11,7 +11,6 @@ from renderer import Renderer
 from wall import Wall
 from game_object import generate_objects
 import objects  # Import all object types to register them
-from speed_debuff_object import SpeedDebuffObject  # Import for isinstance check
 
 # Initialize Pygame - this is required before using any Pygame functions
 pygame.init()
@@ -281,17 +280,11 @@ while running:
         for obj in game_objects[:]:  # Use [:] to iterate over a copy
             # Check if player 1 collects the object
             if obj.is_collected(player1.rect):
-                if isinstance(obj, SpeedDebuffObject):
-                    obj.apply_effect(player1, player2, current_time)
-                else:
-                    obj.apply_effect(player1, current_time)
+                obj.apply_effect(player1, current_time)
                 game_objects.remove(obj)
             # Check if player 2 collects the object
             elif obj.is_collected(player2.rect):
-                if isinstance(obj, SpeedDebuffObject):
-                    obj.apply_effect(player2, player1, current_time)
-                else:
-                    obj.apply_effect(player2, current_time)
+                obj.apply_effect(player2, current_time)
                 game_objects.remove(obj)
     
     # Clear the screen with background color
