@@ -78,44 +78,59 @@ class Renderer:
         
         # Helper function to draw player stats
         def draw_player_stats(player, section_x, is_player1):
-            # Calculate vertical positions with even spacing
-            total_height = 4 * text_height  # Total height needed for all elements
-            start_y = panel_y + (panel_height - total_height) // 2  # Center vertically
-            
-            speed_y = start_y
-            shield_y = speed_y + text_height + 5
-            boosts_y = shield_y + text_height + 5
-            bar_y = boosts_y + text_height + 5
-            
             # Get current time for calculations
             current_time = time.time()
             
-            # Draw speed text with total speed multiplier
+            # Calculate number of lines we'll need based on active effects
+            lines = []
+            y_offset = 0
+            
+            # Player name and speed
             total_speed = player.get_total_speed_multiplier(current_time)
             speed_text = f"P{1 if is_player1 else 2} Speed: {int(total_speed * 100)}%"
-            speed_surface = self.font.render(speed_text, True, COLORS['text'])
-            text_x = section_x + section_padding
-            self.screen.blit(speed_surface, (text_x, speed_y))
+            lines.append((speed_text, COLORS['text']))
             
-            # Draw shield status
-            shield_text = f"Shield: {'ACTIVE' if player.shield_active else 'inactive'}"
+            # Shield status
             shield_color = COLORS['player1'] if is_player1 else COLORS['player2']
-            shield_surface = self.font.render(shield_text, True, shield_color if player.shield_active else COLORS['text'])
-            self.screen.blit(shield_surface, (text_x, shield_y))
+            shield_status_color = shield_color if player.shield_active else COLORS['text']
+            shield_text = f"Shield: {'ACTIVE' if player.shield_active else 'inactive'}"
+            lines.append((shield_text, shield_status_color))
             
-            # Draw active boosts
+            # Check for active effects and their durations
+            if player.is_speedup(current_time):
+                time_remaining = max(0, player.speedup_end_time - current_time)
+                effect_text = f"SPEED BOOST: {time_remaining:.1f}s"
+                lines.append((effect_text, COLORS['speed_boost_object']))
+            
+            if player.is_slowed(current_time):
+                time_remaining = max(0, player.slow_end_time - current_time)
+                effect_text = f"SLOWED: {time_remaining:.1f}s"
+                lines.append((effect_text, COLORS['speed_debuff_object']))
+            
+            # Shield boosts
             active_boosts = len(player.shield_boosts)
             if active_boosts > 0:
                 longest_boost = max(end_time for end_time, _ in player.shield_boosts)
                 time_remaining = max(0, longest_boost - current_time)
-                boosts_text = f"Boosts: {active_boosts} ({time_remaining:.1f}s)"
-            else:
-                boosts_text = "Boosts: 0"
-            boosts_surface = self.font.render(boosts_text, True, COLORS['text'])
-            self.screen.blit(boosts_surface, (text_x, boosts_y))
+                boosts_text = f"Block Boosts: {active_boosts} ({time_remaining:.1f}s)"
+                lines.append((boosts_text, COLORS['text']))
             
-            # Draw progress bar
+            # Calculate spacing based on number of lines
+            line_spacing = text_height + 3
+            total_text_height = len(lines) * line_spacing + bar_height + 5
+            start_y = panel_y + (panel_height - total_text_height) // 2
+            
+            # Draw all text lines
+            text_x = section_x + section_padding
+            y_pos = start_y
+            for text, color in lines:
+                text_surface = self.font.render(text, True, color)
+                self.screen.blit(text_surface, (text_x, y_pos))
+                y_pos += line_spacing
+            
+            # Draw progress bar at the bottom
             progress = min(100, player.get_progress())  # Cap at 100%
+            bar_y = y_pos + 3
             
             # Draw progress bar background
             bar_x = text_x

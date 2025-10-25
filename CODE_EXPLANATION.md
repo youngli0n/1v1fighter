@@ -15,6 +15,7 @@ The code has been refactored into separate files for easier understanding:
 - **`game_config.py`** - Contains all game configuration settings
 - **`ai_player.py`** - Contains the AI controller
 - **`wall.py`** - Contains the Wall class for obstacles
+- **`game_object.py`** - Contains the GameObject system with inheritance
 - **`main.py`** - Main game file with game loop and instructions screen
 - **`renderer.py`** - Handles all drawing and rendering operations
 
@@ -130,7 +131,33 @@ Represents wall obstacles that block player and projectile movement.
 
 ---
 
-### 5. **Renderer Class** (renderer.py)
+### 5. **GameObject System** (game_object.py)
+Uses Python inheritance to create collectible objects.
+
+**Base Class: `GameObject`**
+- Defines common features: position, collision, drawing
+- Acts as a template for all collectible objects
+
+**Child Classes:**
+
+**`SpeedBoostObject`** (inherits from GameObject)
+- Green object
+- Effect: Increases the collecting player's speed for a duration
+- Applies speedup effect to the player who collects it
+
+**`SpeedDebuffObject`** (inherits from GameObject)
+- Orange object
+- Effect: Slows down the opponent
+- Applies slow effect to the other player (not the collector)
+
+**Key Concepts:**
+- **Inheritance**: Child classes inherit all features from parent
+- **Polymorphism**: All objects can be treated as GameObject
+- **Extensibility**: Easy to add new object types by inheriting from GameObject
+
+---
+
+### 6. **Renderer Class** (renderer.py)
 Handles all drawing and rendering operations for the game.
 
 **Key Methods:**
@@ -164,9 +191,10 @@ The main game loop in main.py runs every frame:
 2. **Handle input**: Keyboard events (movement, shooting, shields)
 3. **Update players**: Move them based on input and speed modifiers (checking wall collisions)
 4. **Update bullets**: Move all projectiles and check for hits (with players and walls)
-5. **Check win condition**: Has anyone reached 100% progress?
-6. **Draw everything**: Walls, players, bullets, stats panel, UI
-7. **Repeat**: Go back to step 1
+5. **Check object collection**: See if players collected any objects and apply effects
+6. **Check win condition**: Has anyone reached 100% progress?
+7. **Draw everything**: Walls, objects, players, bullets, stats panel, UI
+8. **Repeat**: Go back to step 1
 
 ---
 
@@ -217,6 +245,10 @@ The main game loop in main.py runs every frame:
 - `walls_enabled`: True (enable/disable wall obstacles)
 - `num_walls_per_side`: 5 (number of walls on each player's side)
 - `wall_min_distance`: 5 (minimum distance between walls in tiles)
+- `objects_enabled`: True (enable/disable collectible objects)
+- `num_objects_per_match`: 10 (total objects per match)
+- `speed_boost_duration`: 5.0 (how long speed boost lasts)
+- `speed_boost_multiplier`: 1.3 (30% speed increase)
 
 ---
 

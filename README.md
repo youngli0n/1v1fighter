@@ -10,6 +10,7 @@ A fast-paced, competitive two-player racing game where players battle to reach t
 - Dynamic speed effects and regeneration
 - Real-time stats tracking
 - Dynamic wall obstacles with collision detection
+- Collectible objects with positive and negative effects (inheritance-based system)
 - AI opponent support (optional)
 - Interactive instructions screen at startup with responsive design
 
