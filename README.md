@@ -11,6 +11,7 @@ A fast-paced, competitive two-player racing game where players battle to reach t
 - Real-time stats tracking
 - Dynamic wall obstacles with collision detection
 - AI opponent support (optional)
+- Interactive instructions screen at startup with responsive design
 
 ## Controls
 

@@ -2,6 +2,40 @@ import pygame
 import time
 from game_config import GAME_CONFIG, COLORS
 
+# Helper function to render multi-line text
+def render_multiline_text(font, text, color, max_width):
+    """
+    Render text with automatic line wrapping
+    
+    Args:
+        font: pygame font object
+        text: string to render
+        color: text color
+        max_width: maximum width before wrapping
+        
+    Returns:
+        list of surface objects, one per line
+    """
+    words = text.split(' ')
+    lines = []
+    current_line = []
+    
+    for word in words:
+        test_line = ' '.join(current_line + [word])
+        test_surface = font.render(test_line, True, color)
+        
+        if test_surface.get_width() <= max_width:
+            current_line.append(word)
+        else:
+            if current_line:
+                lines.append(font.render(' '.join(current_line), True, color))
+            current_line = [word]
+    
+    if current_line:
+        lines.append(font.render(' '.join(current_line), True, color))
+    
+    return lines
+
 
 class Renderer:
     """Handles all rendering and drawing operations for the game"""
@@ -341,3 +375,162 @@ class Renderer:
         text_surface = countdown_font.render(text, True, (255, 255, 255))  # White text
         text_rect = text_surface.get_rect(center=(window_width // 2, window_height // 2))
         self.screen.blit(text_surface, text_rect)
+
+    def draw_instructions_screen(self):
+        """
+        Draw the game instructions screen with responsive sizing
+        
+        This method draws a formatted instructions screen explaining:
+        - Game objective
+        - How to use walls
+        - Shooting mechanics
+        - Hit effects and blocking
+        - Game structure (rounds, win conditions)
+        
+        The screen dynamically adjusts font sizes to ensure all content fits on screen.
+        """
+        screen = self.screen
+        window_width = GAME_CONFIG['window_width_in_pixels']
+        window_height = GAME_CONFIG['window_height_in_pixels']
+        
+        # Create semi-transparent overlay
+        overlay = pygame.Surface((window_width, window_height))
+        overlay.set_alpha(240)
+        overlay.fill((255, 255, 255))
+        screen.blit(overlay, (0, 0))
+        
+        # Define all instruction content
+        instructions = [
+            ("How to Play", "title"),
+            ("1. Race to the finish line first!", "heading"),
+            "Reach 100% at center to win the round.",
+            ("2. Use walls for cover", "heading"),
+            "Hide behind gray walls. They block bullets.",
+            ("3. Combat controls", "heading"),
+            ("Player 1 (Red):", "p1"),
+            "WASD = Move, V = Shoot, B = Shield",
+            ("Player 2 (Blue):", "p2"),
+            "Arrows = Move, , = Shoot, . = Shield",
+            ("4. Getting hit slows you", "heading"),
+            f"Speed drops to {GAME_CONFIG['slow_factor']}x ({int((1-GAME_CONFIG['slow_factor'])*100)}% slower) for {GAME_CONFIG['slow_duration']:.0f}s. Attacker speeds up!",
+            ("5. Blocking gives speed boost", "heading"),
+            f"Each block: +{int(GAME_CONFIG['shield_boost_amount']*100)}% for {GAME_CONFIG['shield_boost_duration']:.0f}s (max {int(GAME_CONFIG['shield_boost_max']*100)}%).",
+            ("6. Win {0} rounds to win match".format(GAME_CONFIG['rounds_to_win']), "heading"),
+            "Best of {0} rounds.".format(GAME_CONFIG['rounds_to_win'] * 2 - 1),
+            ("", "spacer"),
+            ("Press SPACE to start", "prompt"),
+        ]
+        
+        # Calculate optimal font size that fits all content
+        max_font_size = int(window_height / 15)
+        min_font_size = int(window_height / 45)
+        
+        # Function to calculate total height for a given font size
+        def calc_height(base_size):
+            title_font = pygame.font.Font(None, int(base_size * 1.8))
+            heading_font = pygame.font.Font(None, int(base_size * 1.3))
+            body_font = pygame.font.Font(None, base_size)
+            prompt_font = pygame.font.Font(None, int(base_size * 1.2))
+            
+            height = base_size // 3  # Top margin
+            text_width = window_width - (window_width // 10) * 2
+            
+            for text, style in instructions:
+                if not text:
+                    height += base_size // 3
+                    continue
+                    
+                if style == "title":
+                    lines = render_multiline_text(title_font, text, COLORS['text'], text_width)
+                    height += len(lines) * title_font.get_height() * 1.3
+                elif style == "heading":
+                    height += heading_font.get_height() * 0.5  # Extra space before heading
+                    lines = render_multiline_text(heading_font, text, COLORS['text'], text_width)
+                    height += len(lines) * heading_font.get_height() * 1.2
+                elif style == "prompt":
+                    lines = render_multiline_text(prompt_font, text, COLORS['text'], text_width)
+                    height += len(lines) * prompt_font.get_height() * 1.3
+                else:
+                    lines = render_multiline_text(body_font, text, COLORS['text'], text_width)
+                    height += len(lines) * body_font.get_height() * 1.15
+            
+            height += base_size // 3  # Bottom margin
+            return height
+        
+        # Binary search for optimal font size
+        optimal_size = min_font_size
+        for size in range(max_font_size, min_font_size - 1, -2):
+            if calc_height(size) <= window_height * 0.95:
+                optimal_size = size
+                break
+        
+        # Define fonts with optimal size
+        title_font = pygame.font.Font(None, int(optimal_size * 1.8))
+        heading_font = pygame.font.Font(None, int(optimal_size * 1.3))
+        body_font = pygame.font.Font(None, optimal_size)
+        prompt_font = pygame.font.Font(None, int(optimal_size * 1.2))
+        
+        # Calculate starting Y to center content
+        total_height = calc_height(optimal_size)
+        y_pos = max((window_height - total_height) / 2, optimal_size // 3)
+        
+        # Render all instructions with optimal font size
+        text_width = window_width - (window_width // 10) * 2
+        x_pos = window_width // 10
+        
+        for text, style in instructions:
+            # Skip empty spacer elements
+            if not text and style == "spacer":
+                y_pos += body_font.get_height() // 2
+                continue
+            
+            # Determine font and color based on style
+            if style == "title":
+                font = title_font
+                color = COLORS['text']
+                lines = render_multiline_text(font, text, color, text_width)
+                for line in lines:
+                    line_x = (window_width - line.get_width()) // 2
+                    screen.blit(line, (line_x, y_pos))
+                    y_pos += int(font.get_height() * 1.3)
+                y_pos += font.get_height() // 2
+                
+            elif style == "heading":
+                font = heading_font
+                color = COLORS['text']
+                y_pos += font.get_height() // 2
+                lines = render_multiline_text(font, text, color, text_width)
+                for line in lines:
+                    screen.blit(line, (x_pos, y_pos))
+                    y_pos += int(font.get_height() * 1.2)
+                    
+            elif style == "p1":
+                font = body_font
+                color = COLORS['player1']
+                surface = font.render(text, True, color)
+                screen.blit(surface, (x_pos, y_pos))
+                y_pos += int(font.get_height() * 1.15)
+                
+            elif style == "p2":
+                font = body_font
+                color = COLORS['player2']
+                surface = font.render(text, True, color)
+                screen.blit(surface, (x_pos, y_pos))
+                y_pos += int(font.get_height() * 1.15)
+                
+            elif style == "prompt":
+                font = prompt_font
+                color = COLORS['text']
+                lines = render_multiline_text(font, text, color, text_width)
+                for line in lines:
+                    line_x = (window_width - line.get_width()) // 2
+                    screen.blit(line, (line_x, y_pos))
+                    y_pos += int(font.get_height() * 1.3)
+                    
+            else:  # body text
+                font = body_font
+                color = COLORS['text']
+                lines = render_multiline_text(font, text, color, text_width)
+                for line in lines:
+                    screen.blit(line, (x_pos, y_pos))
+                    y_pos += int(font.get_height() * 1.15)

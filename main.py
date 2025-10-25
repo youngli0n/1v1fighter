@@ -146,6 +146,7 @@ def reset_players(p1=None, p2=None, walls=None):
 running = True
 game_over = False
 winner = None
+show_instructions = True  # Show instructions at game start
 walls = generate_walls()  # Generate walls at match start
 player1, player2, ai_controller = reset_players(walls=walls)
 
@@ -159,6 +160,12 @@ while running:
         if event.type == pygame.QUIT:
             running = False
         elif event.type == pygame.KEYDOWN:
+            # Handle instructions screen
+            if show_instructions:
+                if event.key == pygame.K_SPACE:
+                    show_instructions = False
+                    game_state.reset_round()  # Start the first round
+                continue  # Don't process other inputs while instructions are showing
             if game_state.match_over:
                 if event.key == pygame.K_r:  # Start new match
                     game_state.reset_match()
@@ -234,49 +241,53 @@ while running:
     # Clear the screen with background color
     screen.fill(COLORS['background'])
     
-    # Draw center line
-    center_x = GAME_CONFIG['tiles_width'] / 2
-    pygame.draw.line(screen, COLORS['center_line'], 
-                    (center_x * GAME_CONFIG['tile_size_in_pixels'], 0),
-                    (center_x * GAME_CONFIG['tile_size_in_pixels'], 
-                     GAME_CONFIG['tiles_height'] * GAME_CONFIG['tile_size_in_pixels']))
-    
-    # Draw walls
-    for wall in walls:
-        wall.draw(screen)
-    
-    # Draw players with shield effect if active
-    for player in [player1, player2]:
-        if player.shield_active:
-            # Draw shield effect (slightly larger rectangle)
-            shield_rect = pygame.Rect(
-                player.rect.x - 2,
-                player.rect.y - 2,
-                player.rect.width + 4,
-                player.rect.height + 4
-            )
-            pygame.draw.rect(screen, player.color, shield_rect, 2)  # 2 is line width
-        pygame.draw.rect(screen, player.color, player.rect)
-    
-    # Draw projectiles
-    for projectile in player1.projectiles:
-        projectile.draw(screen)
-    for projectile in player2.projectiles:
-        projectile.draw(screen)
-    
-    # Draw stats panel
-    renderer.draw_stats_panel(player1, player2)
-    
-    # Draw appropriate victory screen
-    if game_over:
-        if game_state.match_over:
-            renderer.draw_match_victory_screen(winner, player1, player2, game_state)
-        else:
-            renderer.draw_round_victory_screen(winner, player1, player2, game_state)
-    
-    # Draw countdown if active
-    if game_state.countdown_active:
-        renderer.draw_countdown(game_state)
+    # Draw instructions screen if showing
+    if show_instructions:
+        renderer.draw_instructions_screen()
+    else:
+        # Draw center line
+        center_x = GAME_CONFIG['tiles_width'] / 2
+        pygame.draw.line(screen, COLORS['center_line'], 
+                        (center_x * GAME_CONFIG['tile_size_in_pixels'], 0),
+                        (center_x * GAME_CONFIG['tile_size_in_pixels'], 
+                         GAME_CONFIG['tiles_height'] * GAME_CONFIG['tile_size_in_pixels']))
+        
+        # Draw walls
+        for wall in walls:
+            wall.draw(screen)
+        
+        # Draw players with shield effect if active
+        for player in [player1, player2]:
+            if player.shield_active:
+                # Draw shield effect (slightly larger rectangle)
+                shield_rect = pygame.Rect(
+                    player.rect.x - 2,
+                    player.rect.y - 2,
+                    player.rect.width + 4,
+                    player.rect.height + 4
+                )
+                pygame.draw.rect(screen, player.color, shield_rect, 2)  # 2 is line width
+            pygame.draw.rect(screen, player.color, player.rect)
+        
+        # Draw projectiles
+        for projectile in player1.projectiles:
+            projectile.draw(screen)
+        for projectile in player2.projectiles:
+            projectile.draw(screen)
+        
+        # Draw stats panel
+        renderer.draw_stats_panel(player1, player2)
+        
+        # Draw appropriate victory screen
+        if game_over:
+            if game_state.match_over:
+                renderer.draw_match_victory_screen(winner, player1, player2, game_state)
+            else:
+                renderer.draw_round_victory_screen(winner, player1, player2, game_state)
+        
+        # Draw countdown if active
+        if game_state.countdown_active:
+            renderer.draw_countdown(game_state)
     
     # Update the display
     pygame.display.flip()

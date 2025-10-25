@@ -15,7 +15,7 @@ The code has been refactored into separate files for easier understanding:
 - **`game_config.py`** - Contains all game configuration settings
 - **`ai_player.py`** - Contains the AI controller
 - **`wall.py`** - Contains the Wall class for obstacles
-- **`main.py`** - Main game file with game loop
+- **`main.py`** - Main game file with game loop and instructions screen
 - **`renderer.py`** - Handles all drawing and rendering operations
 
 ## Key Classes and What They Do
@@ -127,6 +127,32 @@ Represents wall obstacles that block player and projectile movement.
 - Mirrored on both sides for fair gameplay
 - Have minimum distance requirement (5 tiles) to prevent clustering
 - Block player movement and projectile shots
+
+---
+
+### 5. **Renderer Class** (renderer.py)
+Handles all drawing and rendering operations for the game.
+
+**Key Methods:**
+
+**`draw_instructions_screen()`**
+- **Purpose**: Displays the game instructions at startup
+- **Features**:
+  - Responsive font sizing that adjusts to fit screen size
+  - Calculates optimal font size to ensure all content fits
+  - Uses binary search algorithm to find best font size
+  - Automatically wraps text to fit screen width
+  - Shows: objective, walls, controls, hit effects, blocking, match structure
+  - Press SPACE to start the game
+
+**`draw_stats_panel(player1, player2)`**
+- Draws the stats panel showing player speeds, shields, and progress bars
+
+**`draw_countdown(game_state)`**
+- Draws the countdown timer before each round starts
+
+**`draw_round_victory_screen()`** and **`draw_match_victory_screen()`**
+- Display victory screens after rounds and matches
 
 ---
 
