@@ -9,6 +9,7 @@ from player import Player
 from game_state import GameState
 from renderer import Renderer
 from wall import Wall
+from game_object import generate_objects, SpeedBoostObject, SpeedDebuffObject
 
 # Initialize Pygame - this is required before using any Pygame functions
 pygame.init()
@@ -175,6 +176,7 @@ game_over = False
 winner = None
 show_instructions = True  # Show instructions at game start
 walls = generate_walls()  # Generate walls at match start
+game_objects = generate_objects(walls, GAME_CONFIG['num_objects_per_match'])  # Generate objects at match start
 player1, player2, ai_controller = reset_players(walls=walls)
 
 while running:
@@ -199,6 +201,7 @@ while running:
                     game_over = False
                     winner = None
                     walls = generate_walls()  # Generate new walls for new match
+                    game_objects = generate_objects(walls, GAME_CONFIG['num_objects_per_match'])  # Generate new objects for new match
                     player1, player2, ai_controller = reset_players(player1, player2, walls)
             elif game_state.round_over:
                 if event.key == pygame.K_SPACE:  # Start next round
@@ -264,6 +267,23 @@ while running:
         # Update and check projectiles
         player1.update_projectiles(dt, player2, current_time, walls)
         player2.update_projectiles(dt, player1, current_time, walls)
+        
+        # Check for object collection
+        for obj in game_objects[:]:  # Use [:] to iterate over a copy
+            # Check if player 1 collects the object
+            if obj.is_collected(player1.rect):
+                if isinstance(obj, SpeedDebuffObject):
+                    obj.apply_effect(player1, player2, current_time)
+                else:
+                    obj.apply_effect(player1, current_time)
+                game_objects.remove(obj)
+            # Check if player 2 collects the object
+            elif obj.is_collected(player2.rect):
+                if isinstance(obj, SpeedDebuffObject):
+                    obj.apply_effect(player2, player1, current_time)
+                else:
+                    obj.apply_effect(player2, current_time)
+                game_objects.remove(obj)
     
     # Clear the screen with background color
     screen.fill(COLORS['background'])
@@ -282,6 +302,10 @@ while running:
         # Draw walls
         for wall in walls:
             wall.draw(screen)
+        
+        # Draw game objects
+        for obj in game_objects:
+            obj.draw(screen)
         
         # Draw players with shield effect if active
         for player in [player1, player2]:

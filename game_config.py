@@ -37,6 +37,16 @@ GAME_CONFIG = {
     
     # AI configuration
     'ai_enabled': False,        # Set to True to enable AI control for Player 2
+    
+    # Object configuration
+    'objects_enabled': True,         # Set to False to disable collectible objects
+    'num_objects_per_match': 10,    # Total number of objects to spawn per match
+    'object_spawn_rate': 1.0,       # How often objects spawn (seconds between spawns)
+    'object_size': 0.8,             # Object size in tiles
+    'speed_boost_duration': 5.0,    # Duration of speed boost effect (seconds)
+    'speed_boost_multiplier': 1.3,  # Speed multiplier (1.3 = 30% faster)
+    'speed_debuff_duration': 3.0,   # Duration of speed debuff effect (seconds)
+    'speed_debuff_multiplier': 0.7, # Speed multiplier (0.7 = 30% slower)
 }
 
 # Calculate window dimensions in pixels based on tile counts
@@ -53,5 +63,7 @@ COLORS = {
     'stats_panel': (240, 240, 240), # Light gray
     'progress_bar_bg': (200, 200, 200),  # Darker gray
     'progress_bar_fill': (0, 150, 0),    # Green
-    'text': (0, 0, 0)               # Black
+    'text': (0, 0, 0),              # Black
+    'speed_boost_object': (0, 255, 0),   # Green for speed boost
+    'speed_debuff_object': (255, 140, 0) # Orange for speed debuff
 } 
