@@ -157,16 +157,24 @@ Uses Python inheritance to create collectible objects.
 - **Position Generation**: Objects are randomly placed on the map, avoiding walls.
 
 ### Object Placement Guardrails:
-The object generation system includes three important guardrails to ensure fair and balanced gameplay:
+The object generation system includes five important guardrails to ensure fair and balanced gameplay:
 
-1. **No Wall Overlap**: Objects cannot be placed where walls exist, preventing impossible-to-reach objects.
-2. **Safe Distance from Players**: Objects must be at least 2 tiles away from player starting positions, preventing unfair advantages at round start.
-3. **No Object Overlap**: Objects must be at least 1 tile apart from each other, ensuring each object is clearly distinguishable and collectible.
+1. **Distance from Borders**: Objects must be at least 0.5 tiles from map edges, keeping them visible and accessible.
+2. **No Wall Overlap**: Objects cannot be placed where walls exist, preventing impossible-to-reach objects.
+3. **Safe Distance from Players**: Objects must be at least 2 tiles away from player starting positions, preventing unfair advantages at round start.
+4. **No Object Overlap**: Objects must be at least 1 tile apart from each other, ensuring each object is clearly distinguishable and collectible.
+5. **Balanced Side Distribution**: Objects are distributed evenly across the left and right sides of the map (maximum 2 object imbalance), giving both players equal opportunities to collect objects.
 
 These guardrails are checked during object generation using distance calculations:
 ```python
 distance = math.sqrt((x1 - x2)**2 + (y1 - y2)**2)
 ```
+
+The balanced distribution algorithm works by:
+- Tracking how many objects are on each side of the map (split at the center X coordinate)
+- When placing a new object, checking if one side has more than 2 objects than the other
+- If imbalanced, forcing the next object to be placed on the side with fewer objects
+- This ensures both players have fair access to collectible objects throughout the match
 
 ---
 
