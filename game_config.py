@@ -38,23 +38,23 @@ GAME_CONFIG = {
     # AI configuration
     'ai_enabled': False,        # Set to True to enable AI control for Player 2
     
-    # Object configuration
-    'objects_enabled': True,         # Set to False to disable collectible objects
-    'num_objects_per_match': 10,    # Total number of objects to spawn per match
-    'object_spawn_rate': 1.0,       # How often objects spawn (seconds between spawns)
-    'object_size': 0.8,             # Object size in tiles
+    # Collectible configuration
+    'collectibles_enabled': True,         # Set to False to disable collectibles
+    'num_collectibles_per_match': 10,    # Total number of collectibles to spawn per match
+    'collectible_spawn_rate': 1.0,       # How often collectibles spawn (seconds between spawns)
+    'collectible_size': 0.8,             # Collectible size in tiles
     'speed_boost_duration': 5.0,    # Duration of speed boost effect (seconds)
     'speed_boost_multiplier': 1.3,  # Speed multiplier (1.3 = 30% faster)
     'speed_debuff_duration': 3.0,   # Duration of speed debuff effect (seconds)
     'speed_debuff_multiplier': 0.7, # Speed multiplier (0.7 = 30% slower)
     'pierce_duration': 1.0,         # Duration of pierce ability (seconds) - ability to break through walls
     
-    # Object placement guardrails
+    # Collectible placement guardrails
     'min_distance_from_border': 0.5,      # Minimum distance from map edges in tiles
     'min_distance_from_player': 2.0,      # Minimum distance from player spawn in tiles
-    'min_distance_between_objects': 1.0,  # Minimum distance between objects in tiles
+    'min_distance_between_collectibles': 1.0,  # Minimum distance between collectibles in tiles
     'min_distance_from_center_line': 1.0, # Minimum distance from center line (player border) in tiles
-    'object_generation_max_attempts': 100, # Maximum attempts to place an object
+    'collectible_generation_max_attempts': 100, # Maximum attempts to place a collectible
 }
 
 # Calculate window dimensions in pixels based on tile counts

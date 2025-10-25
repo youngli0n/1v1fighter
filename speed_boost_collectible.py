@@ -1,14 +1,14 @@
-"""Speed Boost Object - Increases player speed"""
-from game_object import GameObject, register_object_type
+"""Speed Boost Collectible - Increases player speed"""
+from game_collectible import GameCollectible, register_collectible_type
 from game_config import GAME_CONFIG, COLORS
 
 
-class SpeedBoostObject(GameObject):
-    """A collectible object that increases the player's speed"""
+class SpeedBoostCollectible(GameCollectible):
+    """A collectible that increases the player's speed"""
     
     def __init__(self, x, y):
         """
-        Initialize a speed boost object
+        Initialize a speed boost collectible
         
         Args:
             x: X position in tiles
@@ -21,7 +21,7 @@ class SpeedBoostObject(GameObject):
         Increase the player's speed with compounding effect
         
         Args:
-            player: The Player object that collected this
+            player: The Player that collected this
             current_time: Current game time
         """
         # Calculate time to add (compound if already has speedup effect)
@@ -37,5 +37,5 @@ class SpeedBoostObject(GameObject):
         player.speedup_end_time = current_time + new_total_duration
 
 
-# Register this object type
-register_object_type('speed_boost', SpeedBoostObject)
+# Register this collectible type
+register_collectible_type('speed_boost', SpeedBoostCollectible)

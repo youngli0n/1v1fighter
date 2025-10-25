@@ -9,8 +9,8 @@ from player import Player
 from game_state import GameState
 from renderer import Renderer
 from wall import Wall
-from game_object import generate_objects
-import objects  # Import all object types to register them
+from game_collectible import generate_collectibles
+import collectibles  # Import all collectible types to register them
 
 # Initialize Pygame - this is required before using any Pygame functions
 pygame.init()
@@ -177,12 +177,12 @@ game_over = False
 winner = None
 show_instructions = True  # Show instructions at game start
 walls = generate_walls()  # Generate walls at match start
-# Generate players first to get their positions for object placement guardrails
+# Generate players first to get their positions for collectible placement guardrails
 player1, player2, ai_controller = reset_players(walls=walls)
-# Get player starting positions for object placement
+# Get player starting positions for collectible placement
 player1_pos = (player1.start_x, player1.start_y)
 player2_pos = (player2.start_x, player2.start_y)
-game_objects = generate_objects(walls, GAME_CONFIG['num_objects_per_match'], player1_pos, player2_pos)
+game_collectibles = generate_collectibles(walls, GAME_CONFIG['num_collectibles_per_match'], player1_pos, player2_pos)
 
 while running:
     # Calculate delta time in seconds
@@ -207,10 +207,10 @@ while running:
                     winner = None
                     walls = generate_walls()  # Generate new walls for new match
                     player1, player2, ai_controller = reset_players(player1, player2, walls)
-                    # Get player starting positions for object placement
+                    # Get player starting positions for collectible placement
                     player1_pos = (player1.start_x, player1.start_y)
                     player2_pos = (player2.start_x, player2.start_y)
-                    game_objects = generate_objects(walls, GAME_CONFIG['num_objects_per_match'], player1_pos, player2_pos)
+                    game_collectibles = generate_collectibles(walls, GAME_CONFIG['num_collectibles_per_match'], player1_pos, player2_pos)
             elif game_state.round_over:
                 if event.key == pygame.K_SPACE:  # Start next round
                     game_state.reset_round()
@@ -276,16 +276,16 @@ while running:
         player1.update_projectiles(dt, player2, current_time, walls)
         player2.update_projectiles(dt, player1, current_time, walls)
         
-        # Check for object collection
-        for obj in game_objects[:]:  # Use [:] to iterate over a copy
-            # Check if player 1 collects the object
-            if obj.is_collected(player1.rect):
-                obj.apply_effect(player1, current_time)
-                game_objects.remove(obj)
-            # Check if player 2 collects the object
-            elif obj.is_collected(player2.rect):
-                obj.apply_effect(player2, current_time)
-                game_objects.remove(obj)
+        # Check for collectible collection
+        for collectible in game_collectibles[:]:  # Use [:] to iterate over a copy
+            # Check if player 1 collects the collectible
+            if collectible.is_collected(player1.rect):
+                collectible.apply_effect(player1, current_time)
+                game_collectibles.remove(collectible)
+            # Check if player 2 collects the collectible
+            elif collectible.is_collected(player2.rect):
+                collectible.apply_effect(player2, current_time)
+                game_collectibles.remove(collectible)
     
     # Clear the screen with background color
     screen.fill(COLORS['background'])
@@ -305,9 +305,9 @@ while running:
         for wall in walls:
             wall.draw(screen)
         
-        # Draw game objects
-        for obj in game_objects:
-            obj.draw(screen)
+        # Draw collectibles
+        for collectible in game_collectibles:
+            collectible.draw(screen)
             # Draw players with shield effect if active
         for player in [player1, player2]:
             if player.shield_active:

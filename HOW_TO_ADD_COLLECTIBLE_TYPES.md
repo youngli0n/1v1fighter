@@ -1,21 +1,21 @@
-# How to Add New Object Types - Tutorial for Liam
+# How to Add New Collectible Types - Tutorial for Liam
 
-Hi Liam! This guide will teach you how to add new collectible object types to the game. We'll walk through the general process and then do a specific example together!
+Hi Liam! This guide will teach you how to add new collectible types to the game. We'll walk through the general process and then do a specific example together!
 
 ## 📚 Understanding the Basics
 
 ### What is Inheritance?
-Think of inheritance like a family tree! The parent class (`GameObject`) has all the basic features that every object needs (like where it is, what color it is, etc.). Then, each child class (like `SpeedBoostObject`) gets those features for FREE and adds its own special ability.
+Think of inheritance like a family tree! The parent class (`GameCollectible`) has all the basic features that every collectible needs (like where it is, what color it is, etc.). Then, each child class (like `SpeedBoostCollectible`) gets those features for FREE and adds its own special ability.
 
 It's like how you might have your dad's eyes (inherited feature) but your own special hobby (new feature you added)!
 
-### The Object System Structure
+### The Collectible System Structure
 
 ```
-GameObject (Parent)
-├── SpeedBoostObject (Child) - Makes you faster
-├── SpeedDebuffObject (Child) - Slows opponent
-└── YOUR_NEW_OBJECT (Child) - Does something cool!
+GameCollectible (Parent)
+├── SpeedBoostCollectible (Child) - Makes you faster
+├── SpeedBuffCollectible (Child) - Speeds you up
+└── YOUR_NEW_COLLECTIBLE (Child) - Does something cool!
 ```
 
 ---
