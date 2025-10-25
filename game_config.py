@@ -47,6 +47,14 @@ GAME_CONFIG = {
     'speed_boost_multiplier': 1.3,  # Speed multiplier (1.3 = 30% faster)
     'speed_debuff_duration': 3.0,   # Duration of speed debuff effect (seconds)
     'speed_debuff_multiplier': 0.7, # Speed multiplier (0.7 = 30% slower)
+    'pierce_duration': 1.0,         # Duration of pierce ability (seconds) - ability to break through walls
+    
+    # Object placement guardrails
+    'min_distance_from_border': 0.5,      # Minimum distance from map edges in tiles
+    'min_distance_from_player': 2.0,      # Minimum distance from player spawn in tiles
+    'min_distance_between_objects': 1.0,  # Minimum distance between objects in tiles
+    'min_distance_from_center_line': 1.0, # Minimum distance from center line (player border) in tiles
+    'object_generation_max_attempts': 100, # Maximum attempts to place an object
 }
 
 # Calculate window dimensions in pixels based on tile counts
@@ -65,5 +73,6 @@ COLORS = {
     'progress_bar_fill': (0, 150, 0),    # Green
     'text': (0, 0, 0),              # Black
     'speed_boost_object': (0, 255, 0),   # Green for speed boost
-    'speed_debuff_object': (255, 140, 0) # Orange for speed debuff
+    'speed_debuff_object': (255, 140, 0), # Orange for speed debuff
+    'pierce_object': (255, 0, 255)  # Purple for pierce ability
 } 

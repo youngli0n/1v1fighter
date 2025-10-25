@@ -157,13 +157,21 @@ Uses Python inheritance to create collectible objects.
 - **Position Generation**: Objects are randomly placed on the map, avoiding walls.
 
 ### Object Placement Guardrails:
-The object generation system includes five important guardrails to ensure fair and balanced gameplay:
+The object generation system includes six important guardrails to ensure fair and balanced gameplay:
 
 1. **Distance from Borders**: Objects must be at least 0.5 tiles from map edges, keeping them visible and accessible.
 2. **No Wall Overlap**: Objects cannot be placed where walls exist, preventing impossible-to-reach objects.
-3. **Safe Distance from Players**: Objects must be at least 2 tiles away from player starting positions, preventing unfair advantages at round start.
-4. **No Object Overlap**: Objects must be at least 1 tile apart from each other, ensuring each object is clearly distinguishable and collectible.
-5. **Perfect Side Distribution**: Objects are **guaranteed** to be split exactly equally between the left and right sides of the map. If there's an odd number of objects, the extra one is randomly assigned to either side.
+3. **Distance from Center Line**: Objects must be at least 1.0 tile from the center line (player border), ensuring no objects are placed exactly on the border between players' zones.
+4. **Safe Distance from Players**: Objects must be at least 2 tiles away from player starting positions, preventing unfair advantages at round start.
+5. **No Object Overlap**: Objects must be at least 1 tile apart from each other, ensuring each object is clearly distinguishable and collectible.
+6. **Perfect Side Distribution**: Objects are **guaranteed** to be split exactly equally between the left and right sides of the map. If there's an odd number of objects, the extra one is randomly assigned to either side.
+
+All guardrail parameters are configurable in `game_config.py`:
+- `min_distance_from_border`: Distance from map edges (default: 0.5 tiles)
+- `min_distance_from_center_line`: Distance from center border (default: 1.0 tiles)
+- `min_distance_from_player`: Distance from player spawn (default: 2.0 tiles)
+- `min_distance_between_objects`: Minimum spacing between objects (default: 1.0 tiles)
+- `object_generation_max_attempts`: Maximum attempts to place an object (default: 100)
 
 These guardrails are checked during object generation using distance calculations:
 ```python

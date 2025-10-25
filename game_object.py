@@ -165,13 +165,14 @@ def generate_object(object_type, walls, existing_objects=None, player1_pos=None,
     if existing_objects is None:
         existing_objects = []
     
-    # Guardrail constants
-    min_distance_from_player = 2.0  # Minimum distance from player spawn in tiles
-    min_distance_between_objects = 1.0  # Minimum distance between objects in tiles
-    min_distance_from_border = 0.5  # Minimum distance from map borders in tiles
+    # Guardrail constants from game_config
+    min_distance_from_border = GAME_CONFIG['min_distance_from_border']
+    min_distance_from_player = GAME_CONFIG['min_distance_from_player']
+    min_distance_between_objects = GAME_CONFIG['min_distance_between_objects']
+    min_distance_from_center_line = GAME_CONFIG['min_distance_from_center_line']
+    max_attempts = GAME_CONFIG['object_generation_max_attempts']
     
     attempts = 0
-    max_attempts = 200
     
     while attempts < max_attempts:
         attempts += 1
@@ -202,6 +203,13 @@ def generate_object(object_type, walls, existing_objects=None, player1_pos=None,
                 break
         
         if overlaps_wall:
+            continue
+        
+        # Guardrail 2.5: Check distance from center line (player border)
+        map_center_x = GAME_CONFIG['tiles_width'] / 2
+        too_close_to_center = abs(x - map_center_x) < min_distance_from_center_line
+        
+        if too_close_to_center:
             continue
         
         # Guardrail 3: Check distance from player starting positions
