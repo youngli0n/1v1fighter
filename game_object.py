@@ -248,11 +248,11 @@ def generate_object(object_type, walls, existing_objects=None, player1_pos=None,
 
 def generate_objects(walls, num_objects, player1_pos=None, player2_pos=None):
     """
-    Generate a list of random objects for the match with placement guardrails
+    Generate a list of random objects for the match with guaranteed equal distribution
     
     Args:
         walls: List of existing walls
-        num_objects: Number of objects to generate
+        num_objects: Number of objects to generate (split equally between sides)
         player1_pos: (x, y) tuple of player 1 position
         player2_pos: (x, y) tuple of player 2 position
         
@@ -264,51 +264,164 @@ def generate_objects(walls, num_objects, player1_pos=None, player2_pos=None):
     if not GAME_CONFIG['objects_enabled']:
         return objects
     
-    # Track distribution across sides of the map
     # Split the map in half horizontally (left side for Player 1, right side for Player 2)
     map_center_x = GAME_CONFIG['tiles_width'] / 2
-    objects_on_left = 0
-    objects_on_right = 0
     
-    # 50/50 chance for each type
-    for i in range(num_objects):
-        # Balanced side distribution: don't let one side get too far ahead
-        # Allow a maximum imbalance of 2 objects
-        max_imbalance = 2
-        
+    # Calculate objects per side - ensure exact equality
+    objects_per_side = num_objects // 2
+    extra_object = num_objects % 2  # If odd number, we'll randomly assign the extra one
+    
+    # Generate objects for LEFT side (Player 1 area)
+    for i in range(objects_per_side + (1 if extra_object == 1 and random.random() < 0.5 else 0)):
         attempts = 0
-        max_side_attempts = 100
+        max_attempts = 100
         obj = None
-        placed = False
         
-        while attempts < max_side_attempts and not placed:
+        while attempts < max_attempts and obj is None:
             attempts += 1
             
-            # Determine which side this object should be placed on
-            if abs(objects_on_left - objects_on_right) >= max_imbalance:
-                # Force balance: place object on the side with fewer objects
-                if objects_on_left < objects_on_right:
-                    target_side = 'left'
-                else:
-                    target_side = 'right'
-            else:
-                # Random side is fine
-                target_side = 'left' if random.random() < 0.5 else 'right'
-            
-            # Generate object
+            # Generate random object type
             if random.random() < 0.5:
                 obj = generate_object('speed_boost', walls, objects, player1_pos, player2_pos)
             else:
                 obj = generate_object('speed_debuff', walls, objects, player1_pos, player2_pos)
             
-            if obj:
-                # Check if it's on the correct side
-                if (obj.x < map_center_x and target_side == 'left') or (obj.x >= map_center_x and target_side == 'right'):
-                    objects.append(obj)
-                    if obj.x < map_center_x:
-                        objects_on_left += 1
+            # Must be on the LEFT side (x < center)
+            if obj and obj.x < map_center_x:
+                objects.append(obj)
+            else:
+                obj = None
+        
+        # If we failed to place on left side, try one more time with specific constraints
+        if obj is None:
+            # Try generating with constrained X position for left side
+            attempts = 0
+            while attempts < 50 and obj is None:
+                attempts += 1
+                # Force X to be in left half
+                x = random.uniform(0.5, map_center_x - 0.5)
+                y = random.uniform(0.5, GAME_CONFIG['tiles_height'] - 0.5)
+                
+                # Create temporary object to check collision
+                temp_object = GameObject(x, y, (0, 0, 0))
+                
+                # Check all guardrails
+                overlaps_wall = False
+                for wall in walls:
+                    if temp_object.rect.colliderect(wall.rect):
+                        overlaps_wall = True
+                        break
+                
+                if overlaps_wall:
+                    continue
+                
+                too_close_to_player = False
+                if player1_pos:
+                    dx = x - player1_pos[0]
+                    dy = y - player1_pos[1]
+                    if math.sqrt(dx * dx + dy * dy) < 2.0:
+                        too_close_to_player = True
+                
+                if player2_pos and not too_close_to_player:
+                    dx = x - player2_pos[0]
+                    dy = y - player2_pos[1]
+                    if math.sqrt(dx * dx + dy * dy) < 2.0:
+                        too_close_to_player = True
+                
+                if too_close_to_player:
+                    continue
+                
+                overlaps_object = False
+                for existing_obj in objects:
+                    dx = x - existing_obj.x
+                    dy = y - existing_obj.y
+                    if math.sqrt(dx * dx + dy * dy) < 1.0:
+                        overlaps_object = True
+                        break
+                
+                if not overlaps_object:
+                    if random.random() < 0.5:
+                        obj = SpeedBoostObject(x, y)
                     else:
-                        objects_on_right += 1
-                    placed = True
+                        obj = SpeedDebuffObject(x, y)
+                    objects.append(obj)
+    
+    # Generate objects for RIGHT side (Player 2 area)
+    # If we had an odd number and didn't assign it to left, assign to right
+    left_count = len([o for o in objects if o.x < map_center_x])
+    right_count = objects_per_side + (1 if extra_object == 1 and left_count == objects_per_side else 0)
+    
+    for i in range(right_count):
+        attempts = 0
+        max_attempts = 100
+        obj = None
+        
+        while attempts < max_attempts and obj is None:
+            attempts += 1
+            
+            # Generate random object type
+            if random.random() < 0.5:
+                obj = generate_object('speed_boost', walls, objects, player1_pos, player2_pos)
+            else:
+                obj = generate_object('speed_debuff', walls, objects, player1_pos, player2_pos)
+            
+            # Must be on the RIGHT side (x >= center)
+            if obj and obj.x >= map_center_x:
+                objects.append(obj)
+            else:
+                obj = None
+        
+        # If we failed to place on right side, try one more time with specific constraints
+        if obj is None:
+            attempts = 0
+            while attempts < 50 and obj is None:
+                attempts += 1
+                # Force X to be in right half
+                x = random.uniform(map_center_x, GAME_CONFIG['tiles_width'] - 0.5)
+                y = random.uniform(0.5, GAME_CONFIG['tiles_height'] - 0.5)
+                
+                # Create temporary object to check collision
+                temp_object = GameObject(x, y, (0, 0, 0))
+                
+                # Check all guardrails
+                overlaps_wall = False
+                for wall in walls:
+                    if temp_object.rect.colliderect(wall.rect):
+                        overlaps_wall = True
+                        break
+                
+                if overlaps_wall:
+                    continue
+                
+                too_close_to_player = False
+                if player1_pos:
+                    dx = x - player1_pos[0]
+                    dy = y - player1_pos[1]
+                    if math.sqrt(dx * dx + dy * dy) < 2.0:
+                        too_close_to_player = True
+                
+                if player2_pos and not too_close_to_player:
+                    dx = x - player2_pos[0]
+                    dy = y - player2_pos[1]
+                    if math.sqrt(dx * dx + dy * dy) < 2.0:
+                        too_close_to_player = True
+                
+                if too_close_to_player:
+                    continue
+                
+                overlaps_object = False
+                for existing_obj in objects:
+                    dx = x - existing_obj.x
+                    dy = y - existing_obj.y
+                    if math.sqrt(dx * dx + dy * dy) < 1.0:
+                        overlaps_object = True
+                        break
+                
+                if not overlaps_object:
+                    if random.random() < 0.5:
+                        obj = SpeedBoostObject(x, y)
+                    else:
+                        obj = SpeedDebuffObject(x, y)
+                    objects.append(obj)
     
     return objects

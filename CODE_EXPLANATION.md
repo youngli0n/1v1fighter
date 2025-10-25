@@ -163,18 +163,21 @@ The object generation system includes five important guardrails to ensure fair a
 2. **No Wall Overlap**: Objects cannot be placed where walls exist, preventing impossible-to-reach objects.
 3. **Safe Distance from Players**: Objects must be at least 2 tiles away from player starting positions, preventing unfair advantages at round start.
 4. **No Object Overlap**: Objects must be at least 1 tile apart from each other, ensuring each object is clearly distinguishable and collectible.
-5. **Balanced Side Distribution**: Objects are distributed evenly across the left and right sides of the map (maximum 2 object imbalance), giving both players equal opportunities to collect objects.
+5. **Perfect Side Distribution**: Objects are **guaranteed** to be split exactly equally between the left and right sides of the map. If there's an odd number of objects, the extra one is randomly assigned to either side.
 
 These guardrails are checked during object generation using distance calculations:
 ```python
 distance = math.sqrt((x1 - x2)**2 + (y1 - y2)**2)
 ```
 
-The balanced distribution algorithm works by:
-- Tracking how many objects are on each side of the map (split at the center X coordinate)
-- When placing a new object, checking if one side has more than 2 objects than the other
-- If imbalanced, forcing the next object to be placed on the side with fewer objects
-- This ensures both players have fair access to collectible objects throughout the match
+The perfect distribution algorithm works by:
+1. **Dividing the target number**: Calculate `objects_per_side = num_objects // 2` and `extra_object = num_objects % 2`
+2. **Generating LEFT side first**: Place exactly `objects_per_side + (1 if extra object goes left else 0)` objects
+3. **Generating RIGHT side second**: Place exactly `objects_per_side + (1 if extra object goes right else 0)` objects
+4. **Enforcing side constraints**: Objects on the left MUST have `x < map_center_x`, objects on the right MUST have `x >= map_center_x`
+5. **Fallback positioning**: If normal generation fails, force X coordinates within the appropriate side's boundaries
+
+This **guarantees** both players receive exactly the same number of objects, ensuring complete fairness regardless of walls or other constraints.
 
 ---
 
