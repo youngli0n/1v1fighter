@@ -160,9 +160,24 @@ class Player:
             if not self.is_speedup(current_time):
                 self.speedup_end_time = current_time + duration
         elif effect_type == 'block':
-            # Add a new shield boost
-            self.shield_boosts.append((current_time + GAME_CONFIG['shield_boost_duration'], 
-                                     GAME_CONFIG['shield_boost_amount']))
+            # Add a new shield boost with compounding effect
+            # Check if there are any active boosts
+            active_boosts = [(end_time, boost) for end_time, boost in self.shield_boosts 
+                           if current_time < end_time]
+            
+            if active_boosts:
+                # Calculate remaining time from the longest boost
+                max_end_time = max(end_time for end_time, _ in active_boosts)
+                remaining_time = max_end_time - current_time
+                # Compound: add new duration to remaining time
+                new_total_duration = remaining_time + GAME_CONFIG['shield_boost_duration']
+                new_end_time = current_time + new_total_duration
+            else:
+                # No active boost - start fresh
+                new_end_time = current_time + GAME_CONFIG['shield_boost_duration']
+            
+            # Add the compounded boost
+            self.shield_boosts.append((new_end_time, GAME_CONFIG['shield_boost_amount']))
     
     def shoot(self, current_time):
         """
@@ -272,7 +287,7 @@ class Player:
             
             # Check for collision with other player
             if projectile.rect.colliderect(other_player.rect):
-                # If other player's shield is active, block the projectile
+                # If other player's shield is active, block the projectile and fire back at 2x speed
                 if other_player.shield_active:
                     other_player.apply_effect('block', GAME_CONFIG['shield_boost_duration'], current_time)
                 else:
