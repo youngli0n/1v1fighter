@@ -50,9 +50,14 @@ def generate_walls():
     # Track positions to avoid overlaps
     placed_positions = []
     
-    for _ in range(GAME_CONFIG['num_walls_per_side']):
+    # Track if at least one wall blocks each player's path
+    p1_path_blocked = False
+    p2_path_blocked = False
+    
+    for wall_index in range(GAME_CONFIG['num_walls_per_side']):
         attempts = 0
         max_attempts = 100
+        ensure_path_block = (wall_index == 0)  # Force first wall to block a path
         
         while attempts < max_attempts:
             attempts += 1
@@ -60,6 +65,22 @@ def generate_walls():
             # Random position on P1's side (left half, not in starting zone)
             x = random.uniform(2, center_x - GAME_CONFIG['wall_width'] - 1)
             y = random.uniform(GAME_CONFIG['wall_height'], GAME_CONFIG['tiles_height'] - 0.5)
+            
+            # Ensure first wall blocks at least one player's path
+            if ensure_path_block and not (p1_path_blocked and p2_path_blocked):
+                # Player 1 path is from x=0 to x=center_x (left to center)
+                # Player 2 path would be from x=GAME_CONFIG['tiles_width']-1 to x=center_x (right to center, mirrored)
+                # Check if this wall would block P1's path
+                wall_blocks_p1 = (x < center_x and x + GAME_CONFIG['wall_width'] > 0)
+                # For P2 (mirrored), check if mirrored wall would block
+                mirrored_x = GAME_CONFIG['tiles_width'] - x - GAME_CONFIG['wall_width']
+                wall_blocks_p2 = (mirrored_x > center_x and mirrored_x < GAME_CONFIG['tiles_width'] - 1)
+                
+                # Skip if we need to block a path but this wall doesn't do it
+                if wall_blocks_p1 and p1_path_blocked and not p2_path_blocked and not wall_blocks_p2:
+                    continue
+                if wall_blocks_p2 and p2_path_blocked and not p1_path_blocked and not wall_blocks_p1:
+                    continue
             
             # Create temporary wall to check overlaps
             temp_wall = Wall(x, y)
@@ -102,6 +123,12 @@ def generate_walls():
                     # Add mirrored wall for P2's side
                     mirrored_x = GAME_CONFIG['tiles_width'] - x - GAME_CONFIG['wall_width']
                     walls.append(Wall(mirrored_x, y))
+                    
+                    # Track if paths are now blocked
+                    if not p1_path_blocked and x < center_x:
+                        p1_path_blocked = True
+                    if not p2_path_blocked and mirrored_x > center_x:
+                        p2_path_blocked = True
                     
                     placed_positions.append((x, y))
                     break
