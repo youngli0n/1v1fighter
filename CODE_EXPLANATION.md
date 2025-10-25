@@ -151,9 +151,22 @@ Uses Python inheritance to create collectible objects.
 - Applies slow effect to the other player (not the collector)
 
 **Key Concepts:**
-- **Inheritance**: Child classes inherit all features from parent
-- **Polymorphism**: All objects can be treated as GameObject
-- **Extensibility**: Easy to add new object types by inheriting from GameObject
+- **Inheritance**: `SpeedBoostObject` and `SpeedDebuffObject` inherit all properties and methods from `GameObject`, then add their own special behavior in `apply_effect()`.
+- **Polymorphism**: Both object types can be treated as `GameObject` instances (e.g., stored in the same list, drawn the same way), but each behaves differently when `apply_effect()` is called.
+- **Component-Based Design**: Each object type is self-contained with its own behavior, making it easy to add new object types without modifying existing code.
+- **Position Generation**: Objects are randomly placed on the map, avoiding walls.
+
+### Object Placement Guardrails:
+The object generation system includes three important guardrails to ensure fair and balanced gameplay:
+
+1. **No Wall Overlap**: Objects cannot be placed where walls exist, preventing impossible-to-reach objects.
+2. **Safe Distance from Players**: Objects must be at least 2 tiles away from player starting positions, preventing unfair advantages at round start.
+3. **No Object Overlap**: Objects must be at least 1 tile apart from each other, ensuring each object is clearly distinguishable and collectible.
+
+These guardrails are checked during object generation using distance calculations:
+```python
+distance = math.sqrt((x1 - x2)**2 + (y1 - y2)**2)
+```
 
 ---
 

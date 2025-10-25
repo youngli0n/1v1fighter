@@ -176,8 +176,12 @@ game_over = False
 winner = None
 show_instructions = True  # Show instructions at game start
 walls = generate_walls()  # Generate walls at match start
-game_objects = generate_objects(walls, GAME_CONFIG['num_objects_per_match'])  # Generate objects at match start
+# Generate players first to get their positions for object placement guardrails
 player1, player2, ai_controller = reset_players(walls=walls)
+# Get player starting positions for object placement
+player1_pos = (player1.start_x, player1.start_y)
+player2_pos = (player2.start_x, player2.start_y)
+game_objects = generate_objects(walls, GAME_CONFIG['num_objects_per_match'], player1_pos, player2_pos)
 
 while running:
     # Calculate delta time in seconds
@@ -201,8 +205,11 @@ while running:
                     game_over = False
                     winner = None
                     walls = generate_walls()  # Generate new walls for new match
-                    game_objects = generate_objects(walls, GAME_CONFIG['num_objects_per_match'])  # Generate new objects for new match
                     player1, player2, ai_controller = reset_players(player1, player2, walls)
+                    # Get player starting positions for object placement
+                    player1_pos = (player1.start_x, player1.start_y)
+                    player2_pos = (player2.start_x, player2.start_y)
+                    game_objects = generate_objects(walls, GAME_CONFIG['num_objects_per_match'], player1_pos, player2_pos)
             elif game_state.round_over:
                 if event.key == pygame.K_SPACE:  # Start next round
                     game_state.reset_round()

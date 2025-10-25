@@ -1,5 +1,6 @@
 import pygame
 import random
+import math
 from game_config import GAME_CONFIG, COLORS
 
 
@@ -144,13 +145,16 @@ class SpeedDebuffObject(GameObject):
         other_player.apply_effect('slow', GAME_CONFIG['speed_debuff_duration'], current_time)
 
 
-def generate_object(object_type, walls):
+def generate_object(object_type, walls, existing_objects=None, player1_pos=None, player2_pos=None):
     """
-    Generate a random object of a specific type
+    Generate a random object of a specific type with placement guardrails
     
     Args:
         object_type: String indicating type ('speed_boost' or 'speed_debuff')
         walls: List of existing walls to avoid placing objects on
+        existing_objects: List of already placed objects to avoid overlapping
+        player1_pos: (x, y) tuple of player 1 position
+        player2_pos: (x, y) tuple of player 2 position
         
     Returns:
         GameObject instance or None if no valid position found
@@ -158,8 +162,15 @@ def generate_object(object_type, walls):
     if not GAME_CONFIG['objects_enabled']:
         return None
     
+    if existing_objects is None:
+        existing_objects = []
+    
+    # Guardrail constants
+    min_distance_from_player = 2.0  # Minimum distance from player spawn in tiles
+    min_distance_between_objects = 1.0  # Minimum distance between objects in tiles
+    
     attempts = 0
-    max_attempts = 100
+    max_attempts = 200
     
     while attempts < max_attempts:
         attempts += 1
@@ -171,31 +182,67 @@ def generate_object(object_type, walls):
         # Create temporary object to check collision
         temp_object = GameObject(x, y, (0, 0, 0))
         
-        # Check if overlaps with walls
+        # Guardrail 1: Check if overlaps with walls
         overlaps_wall = False
         for wall in walls:
             if temp_object.rect.colliderect(wall.rect):
                 overlaps_wall = True
                 break
         
-        if not overlaps_wall:
-            # Valid position - create the appropriate object type
-            if object_type == 'speed_boost':
-                return SpeedBoostObject(x, y)
-            elif object_type == 'speed_debuff':
-                return SpeedDebuffObject(x, y)
+        if overlaps_wall:
+            continue
+        
+        # Guardrail 2: Check distance from player starting positions
+        too_close_to_player = False
+        if player1_pos:
+            dx = x - player1_pos[0]
+            dy = y - player1_pos[1]
+            distance = math.sqrt(dx * dx + dy * dy)
+            if distance < min_distance_from_player:
+                too_close_to_player = True
+        
+        if player2_pos and not too_close_to_player:
+            dx = x - player2_pos[0]
+            dy = y - player2_pos[1]
+            distance = math.sqrt(dx * dx + dy * dy)
+            if distance < min_distance_from_player:
+                too_close_to_player = True
+        
+        if too_close_to_player:
+            continue
+        
+        # Guardrail 3: Check if overlaps with existing objects
+        overlaps_object = False
+        for existing_obj in existing_objects:
+            dx = x - existing_obj.x
+            dy = y - existing_obj.y
+            distance = math.sqrt(dx * dx + dy * dy)
+            if distance < min_distance_between_objects:
+                overlaps_object = True
+                break
+        
+        if overlaps_object:
+            continue
+        
+        # All guardrails passed - create the appropriate object type
+        if object_type == 'speed_boost':
+            return SpeedBoostObject(x, y)
+        elif object_type == 'speed_debuff':
+            return SpeedDebuffObject(x, y)
     
     # Couldn't find valid position after many attempts
     return None
 
 
-def generate_objects(walls, num_objects):
+def generate_objects(walls, num_objects, player1_pos=None, player2_pos=None):
     """
-    Generate a list of random objects for the match
+    Generate a list of random objects for the match with placement guardrails
     
     Args:
         walls: List of existing walls
         num_objects: Number of objects to generate
+        player1_pos: (x, y) tuple of player 1 position
+        player2_pos: (x, y) tuple of player 2 position
         
     Returns:
         List of GameObject instances
@@ -208,9 +255,9 @@ def generate_objects(walls, num_objects):
     # 50/50 chance for each type
     for _ in range(num_objects):
         if random.random() < 0.5:
-            obj = generate_object('speed_boost', walls)
+            obj = generate_object('speed_boost', walls, objects, player1_pos, player2_pos)
         else:
-            obj = generate_object('speed_debuff', walls)
+            obj = generate_object('speed_debuff', walls, objects, player1_pos, player2_pos)
         
         if obj:
             objects.append(obj)
