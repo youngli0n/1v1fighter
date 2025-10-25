@@ -41,11 +41,16 @@ Open the file `game_config.py` and add your settings:
 'pierce_object': (255, 0, 255)  # Purple color
 ```
 
-### Step 2: Create the Object Class in `game_object.py`
+### Step 2: Create a New File for Your Object! ✨
 
-Open `game_object.py` and add your new class after the existing ones:
+**This is the best part** - you only need to edit ONE file to add a new object! Create a new file called `your_object_name.py` (e.g., `pierce_object.py`):
 
 ```python
+"""Your Object - Description of what it does"""
+from game_object import GameObject, register_object_type
+from game_config import GAME_CONFIG, COLORS
+
+
 class YourObject(GameObject):
     """A collectible object that does something special!"""
     
@@ -70,33 +75,22 @@ class YourObject(GameObject):
         """
         # TODO: Add your effect logic here!
         pass
+
+
+# Register this object type - THIS IS THE MAGIC LINE! 🪄
+register_object_type('your_object', YourObject)
 ```
 
-### Step 3: Update the Generation Logic
+### Step 3: Register Your Object in `objects.py`
 
-Still in `game_object.py`, find the `generate_object` function and add your object type:
+Open `objects.py` and add one line:
 
 ```python
-# Around line 240, add your object type to the if/elif chain:
-if object_type == 'speed_boost':
-    return SpeedBoostObject(x, y)
-elif object_type == 'speed_debuff':
-    return SpeedDebuffObject(x, y)
-elif object_type == 'your_object':  # ADD THIS LINE
-    return YourObject(x, y)          # AND THIS LINE
+# At the top, add:
+import your_object_name  # This will auto-register your object!
 ```
 
-Then in `generate_objects`, add it to the random generation:
-
-```python
-# Find where it randomly chooses object types, add your object:
-if random.random() < 0.33:  # 33% chance
-    obj = generate_object('speed_boost', walls, objects, player1_pos, player2_pos)
-elif random.random() < 0.66:  # 33% chance
-    obj = generate_object('speed_debuff', walls, objects, player1_pos, player2_pos)
-else:  # 34% chance for your new object
-    obj = generate_object('your_object', walls, objects, player1_pos, player2_pos)
-```
+**That's it!** The registry system handles everything else automatically. No need to modify any other files! 🎉
 
 ### Step 4: Update Player Class (if needed)
 
