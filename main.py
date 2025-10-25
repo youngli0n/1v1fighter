@@ -9,7 +9,9 @@ from player import Player
 from game_state import GameState
 from renderer import Renderer
 from wall import Wall
-from game_object import generate_objects, SpeedBoostObject, SpeedDebuffObject
+from game_object import generate_objects
+import objects  # Import all object types to register them
+from speed_debuff_object import SpeedDebuffObject  # Import for isinstance check
 
 # Initialize Pygame - this is required before using any Pygame functions
 pygame.init()
