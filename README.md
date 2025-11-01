@@ -13,18 +13,38 @@ A fast-paced, competitive two-player racing game where players battle to reach t
 - Collectible objects with positive and negative effects (inheritance-based system)
 - AI opponent support (optional)
 - Interactive instructions screen at startup with responsive design
+- Xbox controller support (optional)
 
 ## Controls
 
-### Player 1 (Red)
+### Keyboard Controls
+
+**Player 1 (Red)**
 - Movement: WASD
 - Shoot: V
 - Shield: B
 
-### Player 2 (Blue)
+**Player 2 (Blue)**
 - Movement: Arrow Keys
 - Shoot: ,
 - Shield: .
+
+### Xbox Controller Controls
+
+**Controller 1 (Player 1)**
+- Left Stick: Move
+- A Button: Shoot
+- B Button: Shield (hold)
+
+**Controller 2 (Player 2)**
+- Left Stick: Move
+- A Button: Shoot
+- B Button: Shield (hold)
+
+**To Enable Controllers:**
+1. Connect your Xbox controllers via USB or Bluetooth
+2. In `game_config.py`, set `'use_controllers': True`
+3. Run the game - controllers will be detected automatically
 
 ## Game Mechanics
 

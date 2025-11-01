@@ -22,25 +22,27 @@ class SpeedBuffCollectible(GameCollectible):
         # Call the parent class's __init__ method
         super().__init__(x, y, COLORS['speed_debuff_object'])  # Using existing color
     
-    def apply_effect(self, player, current_time):
+    def apply_effect(self, player, current_time, other_player=None):
         """
-        Increase player speed with compounding effect
+        Decrease the other player's speed with compounding effect
         
         Args:
             player: The Player that collected this
             current_time: Current game time
+            other_player: The other Player that is being slowed down
         """
-        # Calculate time to add (compound if already has speedup effect)
-        if current_time < player.speedup_end_time:
-            # Already has speedup - extend the duration
-            remaining_time = player.speedup_end_time - current_time
-            new_total_duration = remaining_time + GAME_CONFIG['speed_boost_duration']
-        else:
-            # No existing speedup - start fresh
-            new_total_duration = GAME_CONFIG['speed_boost_duration']
-        
-        # Apply the compounded speedup effect
-        player.speedup_end_time = current_time + new_total_duration
+        if other_player is not None:
+            # Calculate time to add (compound if already has slow effect)
+            if current_time < other_player.slow_end_time:
+                # Already slowed - extend the duration
+                remaining_time = other_player.slow_end_time - current_time
+                new_total_duration = remaining_time + GAME_CONFIG['speed_debuff_duration']
+            else:
+                # No existing slow - start fresh
+                new_total_duration = GAME_CONFIG['speed_debuff_duration']
+
+            # Apply the compounded slow effect (NOT speedup!)
+            other_player.slow_end_time = current_time + new_total_duration
 
 
 # Register this collectible type

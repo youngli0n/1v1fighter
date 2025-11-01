@@ -14,110 +14,104 @@ It's like how you might have your dad's eyes (inherited feature) but your own sp
 ```
 GameCollectible (Parent)
 ├── SpeedBoostCollectible (Child) - Makes you faster
-├── SpeedBuffCollectible (Child) - Speeds you up
+├── SpeedBuffCollectible (Child) - Slows down opponent
 └── YOUR_NEW_COLLECTIBLE (Child) - Does something cool!
 ```
 
 ---
 
-## 🎯 Step-by-Step Guide to Adding a New Object Type
+## 🎯 Step-by-Step Guide to Adding a New Collectible Type
 
 ### Step 1: Add Configuration to `game_config.py`
 
 Open the file `game_config.py` and add your settings:
 
 ```python
-# In the GAME_CONFIG dictionary, add your new object settings:
-'your_object_duration': 5.0,  # How long the effect lasts (seconds)
-'your_object_value': 2.0,     # The strength/power of the effect
+# In the GAME_CONFIG dictionary, add your new collectible settings:
+'your_collectible_duration': 5.0,  # How long the effect lasts (seconds)
+'your_collectible_value': 2.0,     # The strength/power of the effect
 
-# In the COLORS dictionary, add a color for your object:
-'your_object': (255, 100, 50)  # RGB color (Red, Green, Blue)
+# In the COLORS dictionary, add a color for your collectible:
+'your_collectible': (255, 100, 50)  # RGB color (Red, Green, Blue)
 ```
 
-**Example**: We're making a "Pierce" object, so we'd add:
-```python
-'pierce_duration': 1.0,  # You can break through walls for 1 second
-'pierce_object': (255, 0, 255)  # Purple color
-```
+### Step 2: Create a New File for Your Collectible! ✨
 
-### Step 2: Create a New File for Your Object! ✨
-
-**This is the best part** - you only need to edit ONE file to add a new object! Create a new file called `your_object_name.py` (e.g., `pierce_object.py`):
+**This is the best part** - you only need to edit ONE file to add a new collectible! Create a new file called `your_collectible_name_collectible.py` (e.g., `bullet_pierce_collectible.py`):
 
 ```python
-"""Your Object - Description of what it does"""
-from game_object import GameObject, register_object_type
+"""Your Collectible - Description of what it does"""
+from game_collectible import GameCollectible, register_collectible_type
 from game_config import GAME_CONFIG, COLORS
 
 
-class YourObject(GameObject):
-    """A collectible object that does something special!"""
+class YourCollectible(GameCollectible):
+    """A collectible that does something special!"""
     
     def __init__(self, x, y):
         """
-        Initialize your object
+        Initialize your collectible
         
         Args:
             x: X position in tiles
             y: Y position in tiles
         """
         # Call the parent class's __init__ method with the color
-        super().__init__(x, y, COLORS['your_object'])
+        super().__init__(x, y, COLORS['your_collectible'])
     
-    def apply_effect(self, player, current_time):
+    def apply_effect(self, player, current_time, other_player=None):
         """
         Apply the special effect to the player
         
         Args:
-            player: The Player object that collected this
+            player: The Player that collected this
             current_time: Current game time
+            other_player: The other player (optional, for opponent-targeting effects)
         """
         # TODO: Add your effect logic here!
         pass
 
 
-# Register this object type - THIS IS THE MAGIC LINE! 🪄
-register_object_type('your_object', YourObject)
+# Register this collectible type - THIS IS THE MAGIC LINE! 🪄
+register_collectible_type('your_collectible', YourCollectible)
 ```
 
-### Step 3: Register Your Object in `objects.py`
+### Step 3: Register Your Collectible in `collectibles.py`
 
-Open `objects.py` and add one line:
+Open `collectibles.py` and add one line:
 
 ```python
-# At the top, add:
-import your_object_name  # This will auto-register your object!
+# Add this import at the top:
+import your_collectible_name_collectible  # This will auto-register your collectible!
 ```
 
 **That's it!** The registry system handles everything else automatically. No need to modify any other files! 🎉
 
 ### Step 4: Update Player Class (if needed)
 
-If your object affects the player, you might need to add a method to `player.py`:
+If your collectible affects the player, you might need to add attributes to `player.py`:
 
+In the `Player.__init__` method, add:
 ```python
-# Add a method to the Player class:
-def set_special_ability(self, ability_type, end_time):
-    """Set a special ability with an expiration time"""
-    self.special_ability = ability_type
-    self.special_ability_end_time = end_time
+# Add new attributes for your collectible's effect
+self.your_ability = False
+self.your_ability_end_time = 0
 ```
 
-### Step 5: Update Collection Logic in `main.py`
-
-In `main.py`, find where objects are collected and add logic for your object:
-
+In the `Player.reset` method, add:
 ```python
-# Find the object collection code and add your special handling:
-if isinstance(obj, YourObject):
-    obj.apply_effect(player1, current_time)
-    # Add any special visual effects here if you want!
+# Reset your ability
+self.your_ability = False
+self.your_ability_end_time = 0
 ```
 
-### Step 6: Test Your Object!
+### Step 5: Update Game Logic (if needed)
 
-Run the game and make sure your object:
+If your collectible needs special logic (like checking if bullets can pierce), update the relevant functions in the appropriate files.
+
+### Step 6: Test Your Collectible!
+
+Run the game and make sure your collectible:
 - ✅ Appears on the map with the right color
 - ✅ Can be collected by walking into it
 - ✅ Applies the effect you designed
@@ -125,155 +119,222 @@ Run the game and make sure your object:
 
 ---
 
-## 🎮 Complete Example: Pierce Ability Object
+## 🎮 Complete Example: Bullet Pierce Collectible
 
-Now let's create the "Pierce" ability together - it lets players break through walls for a short time!
+Now let's create a "Bullet Pierce" collectible together! This ability makes your bullets destroy walls - when a bullet hits a wall, the wall turns red briefly and then disappears!
 
 ### Step 1: Configuration (`game_config.py`)
 
-Already added! We added:
-- `'pierce_duration': 1.0`
-- `'pierce_object': (255, 0, 255)`
-
-### Step 2: Create PierceObject Class (`game_object.py`)
-
-Add this class after `SpeedDebuffObject`:
+Add these settings to the `GAME_CONFIG` dictionary:
 
 ```python
-class PierceObject(GameObject):
-    """A collectible object that allows walking through walls"""
+'bullet_pierce_duration': 10.0,  # Bullets can break walls for 10 seconds
+```
+
+Add a color to the `COLORS` dictionary:
+
+```python
+'bullet_pierce_collectible': (100, 200, 255)  # Light blue color
+```
+
+### Step 2: Create BulletPierceCollectible Class
+
+Create a new file called `bullet_pierce_collectible.py`:
+
+```python
+"""Bullet Pierce Collectible - Makes bullets destroy walls"""
+from game_collectible import GameCollectible, register_collectible_type
+from game_config import GAME_CONFIG, COLORS
+
+
+class BulletPierceCollectible(GameCollectible):
+    """A collectible that makes bullets destroy walls"""
     
     def __init__(self, x, y):
         """
-        Initialize a pierce object
+        Initialize a bullet pierce collectible
         
         Args:
             x: X position in tiles
             y: Y position in tiles
         """
-        super().__init__(x, y, COLORS['pierce_object'])
+        super().__init__(x, y, COLORS['bullet_pierce_collectible'])
     
-    def apply_effect(self, player, current_time):
+    def apply_effect(self, player, current_time, other_player=None):
         """
-        Grant the player wall-piercing ability
+        Grant the player wall-destroying bullets
         
         Args:
-            player: The Player object that collected this
+            player: The Player that collected this
             current_time: Current game time
+            other_player: Not used for this collectible
         """
-        # Set the player's pierce ability with expiration time
-        player.pierce_ability = True
-        player.pierce_ability_end_time = current_time + GAME_CONFIG['pierce_duration']
+        # Set the player's bullet pierce ability with expiration time
+        player.bullet_pierce_active = True
+        player.bullet_pierce_end_time = current_time + GAME_CONFIG['bullet_pierce_duration']
+
+
+# Register this collectible type
+register_collectible_type('bullet_pierce', BulletPierceCollectible)
 ```
 
-### Step 3: Update Generation (`game_object.py`)
+### Step 3: Register in `collectibles.py`
 
-Add to the `generate_object` function:
-
-```python
-elif object_type == 'pierce':
-    return PierceObject(x, y)
-```
-
-Update `generate_objects` to include pierce objects:
+Add this line to `collectibles.py`:
 
 ```python
-# Choose randomly between 3 types (33% each)
-rand = random.random()
-if rand < 0.33:
-    obj = generate_object('speed_boost', walls, objects, player1_pos, player2_pos)
-elif rand < 0.66:
-    obj = generate_object('speed_debuff', walls, objects, player1_pos, player2_pos)
-else:
-    obj = generate_object('pierce', walls, objects, player1_pos, player2_pos)
+import bullet_pierce_collectible  # Registers 'bullet_pierce'
 ```
 
 ### Step 4: Update Player Class (`player.py`)
 
-In the `Player.__init__` method, add:
+In the `Player.__init__` method (around line 30), add:
 ```python
-# Add after line ~40
-self.pierce_ability = False
-self.pierce_ability_end_time = 0
+# Add after the other ability variables
+self.bullet_pierce_active = False
+self.bullet_pierce_end_time = 0
 ```
 
-In the `Player.reset` method, add:
+In the `Player.reset` method (around line 50), add:
 ```python
-# Reset pierce ability
-self.pierce_ability = False
-self.pierce_ability_end_time = 0
+# Reset bullet pierce ability
+self.bullet_pierce_active = False
+self.bullet_pierce_end_time = 0
 ```
 
-In the `Player.move` method, find the wall collision check and modify it:
+### Step 5: Update Wall Class (`wall.py`)
+
+Add methods to the `Wall` class to handle being destroyed:
+
 ```python
-# Find this code (around line 120):
+def mark_for_destruction(self):
+    """Mark this wall to be destroyed (turns red)"""
+    self.being_destroyed = True
+
+def is_being_destroyed(self):
+    """Check if this wall is being destroyed"""
+    return hasattr(self, 'being_destroyed') and self.being_destroyed
+```
+
+Update the `Wall.__init__` method to add:
+```python
+self.being_destroyed = False
+```
+
+Update the `Wall.draw` method to draw red when being destroyed:
+
+```python
+def draw(self, screen):
+    """
+    Draw the wall on the screen
+    
+    Args:
+        screen: The pygame surface to draw on
+    """
+    # Draw red if being destroyed, otherwise normal color
+    color = (255, 0, 0) if self.being_destroyed else GAME_CONFIG['wall_color']
+    pygame.draw.rect(screen, color, self.rect)
+```
+
+### Step 6: Update Projectile-Wall Collision Logic (`player.py`)
+
+In the `Player.update_projectiles` method, find where wall collisions are checked (around line 277) and modify it:
+
+**Find this code:**
+```python
+# Check for collision with walls
+hit_wall = False
 if walls:
-    temp_rect = pygame.Rect(...) # Create temp rect for new position
     for wall in walls:
-        if temp_rect.colliderect(wall.rect):
-            can_move = False
-            break
-
-# Change it to:
-if walls and not self.pierce_ability:
-    temp_rect = pygame.Rect(...)
-    for wall in walls:
-        if temp_rect.colliderect(wall.rect):
-            can_move = False
+        if projectile.rect.colliderect(wall.rect):
+            collision_detected = True
+            hit_wall = True
             break
 ```
 
-Also update the `Player.move` method to check for expired pierce:
+**Change it to:**
 ```python
-# At the start of move method, check if pierce expired:
-if self.pierce_ability and current_time >= self.pierce_ability_end_time:
-    self.pierce_ability = False
+# Check for collision with walls
+hit_wall = False
+if walls:
+    for wall in walls:
+        if projectile.rect.colliderect(wall.rect):
+            # Check if player has bullet pierce ability
+            if self.bullet_pierce_active:
+                # Mark wall for destruction and continue through
+                wall.mark_for_destruction()
+                # Don't stop the bullet, continue its path!
+                continue
+            else:
+                # Normal collision - bullet stops
+                collision_detected = True
+                hit_wall = True
+                break
 ```
 
-### Step 5: Update Main Loop (`main.py`)
+### Step 7: Update Main Loop (`main.py`)
 
-The collection code should already work! Just verify it handles `PierceObject`:
+Add logic to remove destroyed walls. In the main game loop, add this after the projectile updates:
 
 ```python
-# This code should already work for any GameObject:
-if obj.is_collected(player1.rect):
-    if isinstance(obj, SpeedDebuffObject):
-        obj.apply_effect(player1, player2, current_time)
-    else:
-        obj.apply_effect(player1, current_time)
-    game_objects.remove(obj)
+# Check for walls marked for destruction and remove them after a brief delay
+for wall in walls[:]:  # Use [:] to iterate over a copy
+    if wall.is_being_destroyed():
+        walls.remove(wall)
 ```
+
+Also add logic to check if pierce ability expired. Add this to the player update section:
+
+```python
+# Check if bullet pierce ability expired
+if player1.bullet_pierce_active and current_time >= player1.bullet_pierce_end_time:
+    player1.bullet_pierce_active = False
+if player2.bullet_pierce_active and current_time >= player2.bullet_pierce_end_time:
+    player2.bullet_pierce_active = False
+```
+
+### Step 8: Test Your Collectible!
+
+Run the game and test:
+1. Collect the bullet pierce collectible
+2. Fire bullets at walls
+3. Watch them turn red and disappear! 🎉
 
 ---
 
-## 🎨 Tips for Creating Great Objects
+## 🎨 Tips for Creating Great Collectibles
 
 1. **Keep it simple**: Start with one effect, then add more if needed
-2. **Test often**: Make sure your object doesn't break the game!
-3. **Balance is key**: Make sure your object isn't too powerful or too weak
-4. **Have fun**: This is your game - make it awesome!
+2. **Test often**: Make sure your collectible doesn't break the game!
+3. **Balance is key**: Make sure your collectible isn't too powerful or too weak
+4. **Visual feedback**: Let players know when abilities are active (like showing a status icon)
+5. **Have fun**: This is your game - make it awesome!
 
 ---
 
 ## 🐛 Common Issues and Solutions
 
-**Problem**: My object doesn't appear on the map!
-- **Solution**: Check that you added it to `generate_object` and `generate_objects` functions
+**Problem**: My collectible doesn't appear on the map!
+- **Solution**: Make sure you added the import to `collectibles.py` and cleared Python's cache by deleting `__pycache__` folders
 
-**Problem**: My object appears but nothing happens when I collect it!
-- **Solution**: Make sure `apply_effect` is doing something, and check the collection code in `main.py`
+**Problem**: My collectible appears but nothing happens when I collect it!
+- **Solution**: Make sure `apply_effect` is doing something, check that you added the effect attributes to the Player class
 
-**Problem**: The game crashes when I collect my object!
-- **Solution**: Check that all player attributes you're using exist in the Player class
+**Problem**: The game crashes when I collect my collectible!
+- **Solution**: Check that all player attributes you're using exist in the Player class (especially in `__init__` and `reset`)
+
+**Problem**: My ability doesn't expire!
+- **Solution**: Make sure you added the expiration check in the main game loop
 
 ---
 
 ## 🚀 What's Next?
 
-Now that you know how to add objects, try creating:
-- **Shield Object**: Temporary invincibility
-- **Multi-Shot Object**: Fire multiple bullets at once
-- **Teleport Object**: Instantly jump forward
-- **Freeze Object**: Freeze the opponent in place
+Now that you know how to add collectibles, try creating:
+- **Multi-Shot Collectible**: Fire multiple bullets at once
+- **Teleport Collectible**: Instantly jump forward
+- **Freeze Collectible**: Freeze the opponent in place
+- **Shield Collectible**: Temporary invincibility
+- **Speed Burst Collectible**: Short super-speed boost
 
 The sky's the limit! Have fun coding! 🎮✨

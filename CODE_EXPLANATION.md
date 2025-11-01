@@ -15,7 +15,7 @@ The code has been refactored into separate files for easier understanding:
 - **`game_config.py`** - Contains all game configuration settings
 - **`ai_player.py`** - Contains the AI controller
 - **`wall.py`** - Contains the Wall class for obstacles
-- **`game_object.py`** - Contains the GameObject system with inheritance
+- **`game_collectible.py`** - Contains the GameCollectible system with inheritance
 - **`main.py`** - Main game file with game loop and instructions screen
 - **`renderer.py`** - Handles all drawing and rendering operations
 
@@ -224,12 +224,12 @@ Handles all drawing and rendering operations for the game.
 The main game loop in main.py runs every frame:
 
 1. **Calculate time**: `dt = clock.tick(60) / 1000` - time since last frame
-2. **Handle input**: Keyboard events (movement, shooting, shields)
+2. **Handle input**: Keyboard/controller events (movement, shooting, shields)
 3. **Update players**: Move them based on input and speed modifiers (checking wall collisions)
 4. **Update bullets**: Move all projectiles and check for hits (with players and walls)
-5. **Check object collection**: See if players collected any objects and apply effects
+5. **Check collectible collection**: See if players collected any collectibles and apply effects
 6. **Check win condition**: Has anyone reached 100% progress?
-7. **Draw everything**: Walls, objects, players, bullets, stats panel, UI
+7. **Draw everything**: Walls, collectibles, players, bullets, stats panel, UI
 8. **Repeat**: Go back to step 1
 
 ---
@@ -250,6 +250,34 @@ The main game loop in main.py runs every frame:
 # Position updates: new_x = x + dx * dt * 0.5
 # Player moves at half speed for 2 seconds
 ```
+
+---
+
+## Input System: Keyboard and Controllers
+
+The game supports both keyboard and Xbox controller input.
+
+### Input Modes
+
+**Keyboard Mode** (default):
+- Player 1: WASD (movement), V (shoot), B (shield)
+- Player 2: Arrow keys (movement), , (shoot), . (shield)
+
+**Controller Mode**:
+- Enabled via `'use_controllers': True` in `game_config.py`
+- Player 1: Controller 1 (Left Stick, A button, B button)
+- Player 2: Controller 2 (Left Stick, A button, B button)
+
+**AI Mode**:
+- Set `'ai_enabled': True` for AI-controlled Player 2
+- Player 1 still uses keyboard/controller
+
+### How It Works
+
+1. **Initialization**: Controllers detected at startup via `pygame.joystick.init()`
+2. **Event Handling**: Main loop listens for both keyboard and joystick events
+3. **Movement**: Left stick provides analog input (axes 0 and 1)
+4. **Buttons**: A and B buttons trigger actions (shoot, shield)
 
 ---
 

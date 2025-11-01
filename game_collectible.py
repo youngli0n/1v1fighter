@@ -61,7 +61,7 @@ class GameCollectible:
         """
         pygame.draw.rect(screen, self.color, self.rect)
     
-    def apply_effect(self, player, current_time):
+    def apply_effect(self, player, current_time, other_player=None):
         """
         Apply the collectible's effect to a player
         
@@ -245,7 +245,7 @@ def generate_collectibles(walls, num_collectibles, player1_pos=None, player2_pos
     """
     collectibles = []
     
-    if not GAME_CONFIG['objects_enabled']:
+    if not GAME_CONFIG['collectibles_enabled']:
         return collectibles
     
     # Split the map in half horizontally (left side for Player 1, right side for Player 2)

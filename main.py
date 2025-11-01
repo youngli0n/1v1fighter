@@ -15,6 +15,9 @@ import collectibles  # Import all collectible types to register them
 # Initialize Pygame - this is required before using any Pygame functions
 pygame.init()
 
+# Initialize joystick subsystem for controllers
+pygame.joystick.init()
+
 # Create the game window
 screen = pygame.display.set_mode((GAME_CONFIG['window_width_in_pixels'], GAME_CONFIG['window_height_in_pixels']))
 pygame.display.set_caption("Learning Python Game - Sprint 3")
@@ -30,6 +33,28 @@ renderer = Renderer(screen, font)
 
 # Create game state tracker
 game_state = GameState()
+
+# Initialize controllers if enabled
+controller1 = None
+controller2 = None
+if GAME_CONFIG['use_controllers']:
+    # Get number of connected joysticks
+    joystick_count = pygame.joystick.get_count()
+    print(f"Found {joystick_count} controller(s)")
+    
+    # Initialize controllers
+    if joystick_count >= 1:
+        controller1 = pygame.joystick.Joystick(0)
+        controller1.init()
+        print(f"Controller 1: {controller1.get_name()}")
+    if joystick_count >= 2:
+        controller2 = pygame.joystick.Joystick(1)
+        controller2.init()
+        print(f"Controller 2: {controller2.get_name()}")
+    
+    # Warn if controllers expected but not found
+    if joystick_count < 2:
+        print(f"Warning: Only {joystick_count} controller(s) found, but controllers enabled")
 
 def generate_walls():
     """
@@ -235,6 +260,34 @@ while running:
                 player1.shield_active = False
             elif event.key == pygame.K_PERIOD:  # Player 2 shield
                 player2.shield_active = False
+        elif event.type == pygame.JOYBUTTONDOWN:
+            # Handle controller button presses
+            if GAME_CONFIG['use_controllers']:
+                # Controller 1 (Player 1) buttons
+                if event.joy == 0 and controller1:
+                    if event.button == 0:  # A button - shoot
+                        if not game_state.countdown_active:
+                            player1.shoot(current_time)
+                    elif event.button == 1:  # B button - shield
+                        player1.shield_active = True
+                # Controller 2 (Player 2) buttons
+                elif event.joy == 1 and controller2:
+                    if event.button == 0:  # A button - shoot
+                        if not game_state.countdown_active:
+                            player2.shoot(current_time)
+                    elif event.button == 1:  # B button - shield
+                        player2.shield_active = True
+        elif event.type == pygame.JOYBUTTONUP:
+            # Handle controller button releases
+            if GAME_CONFIG['use_controllers']:
+                # Controller 1 (Player 1) buttons
+                if event.joy == 0 and controller1:
+                    if event.button == 1:  # B button - shield release
+                        player1.shield_active = False
+                # Controller 2 (Player 2) buttons
+                elif event.joy == 1 and controller2:
+                    if event.button == 1:  # B button - shield release
+                        player2.shield_active = False
     
     # Update countdown if active
     if game_state.countdown_active:
@@ -246,18 +299,29 @@ while running:
         # Get keyboard input for player movement
         keys = pygame.key.get_pressed()
         
-        # Calculate movement for Player 1 (WASD)
-        dx1 = (keys[pygame.K_d] - keys[pygame.K_a]) * GAME_CONFIG['player_speed']
-        dy1 = (keys[pygame.K_s] - keys[pygame.K_w]) * GAME_CONFIG['player_speed']
+        # Calculate movement for Player 1
+        if GAME_CONFIG['use_controllers'] and controller1:
+            # Use controller 1 left stick
+            dx1 = controller1.get_axis(0) * GAME_CONFIG['player_speed']  # Left stick X
+            dy1 = controller1.get_axis(1) * GAME_CONFIG['player_speed']  # Left stick Y
+        else:
+            # Use keyboard (WASD)
+            dx1 = (keys[pygame.K_d] - keys[pygame.K_a]) * GAME_CONFIG['player_speed']
+            dy1 = (keys[pygame.K_s] - keys[pygame.K_w]) * GAME_CONFIG['player_speed']
         
         # Move Player 1
         player1.move(dx1, dy1, dt, current_time, player2, walls)
         
-        # Handle Player 2 movement (either AI or keyboard)
+        # Handle Player 2 movement
         if GAME_CONFIG['ai_enabled'] and ai_controller:
             ai_controller.update(dt, current_time)
+        elif GAME_CONFIG['use_controllers'] and controller2:
+            # Use controller 2 left stick
+            dx2 = controller2.get_axis(0) * GAME_CONFIG['player_speed']  # Left stick X
+            dy2 = controller2.get_axis(1) * GAME_CONFIG['player_speed']  # Left stick Y
+            player2.move(dx2, dy2, dt, current_time, player1, walls)
         else:
-            # Calculate movement for Player 2 (Arrow keys)
+            # Use keyboard (Arrow keys)
             dx2 = (keys[pygame.K_RIGHT] - keys[pygame.K_LEFT]) * GAME_CONFIG['player_speed']
             dy2 = (keys[pygame.K_DOWN] - keys[pygame.K_UP]) * GAME_CONFIG['player_speed']
             player2.move(dx2, dy2, dt, current_time, player1, walls)
@@ -280,11 +344,11 @@ while running:
         for collectible in game_collectibles[:]:  # Use [:] to iterate over a copy
             # Check if player 1 collects the collectible
             if collectible.is_collected(player1.rect):
-                collectible.apply_effect(player1, current_time)
+                collectible.apply_effect(player1, current_time, player2)
                 game_collectibles.remove(collectible)
             # Check if player 2 collects the collectible
             elif collectible.is_collected(player2.rect):
-                collectible.apply_effect(player2, current_time)
+                collectible.apply_effect(player2, current_time, player1)
                 game_collectibles.remove(collectible)
     
     # Clear the screen with background color

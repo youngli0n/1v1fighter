@@ -16,13 +16,14 @@ class SpeedBoostCollectible(GameCollectible):
         """
         super().__init__(x, y, COLORS['speed_boost_object'])
     
-    def apply_effect(self, player, current_time):
+    def apply_effect(self, player, current_time, other_player=None):
         """
         Increase the player's speed with compounding effect
         
         Args:
             player: The Player that collected this
             current_time: Current game time
+            other_player: The other Player (not used for this collectible)
         """
         # Calculate time to add (compound if already has speedup effect)
         if current_time < player.speedup_end_time:
