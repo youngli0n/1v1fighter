@@ -84,6 +84,7 @@ This project was developed in sprints, with each sprint adding new features:
 - Sprint 3: Shooting mechanics and effects
 - Sprint 4: Shield system and win conditions
 - Sprint 5: Wall obstacles and code refactoring
+- Sprint 6: Collectible system and Xbox controller support
 
 ## License
 
