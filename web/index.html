@@ -21,9 +21,104 @@
       user-select: none;
     }
     canvas { display: block; }
+
+    /* ── Install prompt overlay ── */
+    #install-prompt {
+      display: none;
+      position: fixed; inset: 0; z-index: 9999;
+      background: rgba(0,0,0,0.7);
+      justify-content: center; align-items: center;
+      font-family: -apple-system, Arial, sans-serif;
+      -webkit-user-select: none; user-select: none;
+    }
+    #install-prompt.visible { display: flex; }
+
+    #install-box {
+      background: #fff; border-radius: 20px;
+      max-width: 420px; width: 88%; padding: 28px 24px 20px;
+      text-align: center; box-shadow: 0 8px 40px rgba(0,0,0,0.35);
+    }
+    #install-box h2 {
+      margin: 0 0 14px; font-size: 22px; color: #111;
+    }
+    #install-box .step {
+      display: flex; align-items: center; gap: 12px;
+      text-align: left; margin: 12px 0; font-size: 15px; color: #333;
+    }
+    #install-box .step-num {
+      flex-shrink: 0; width: 32px; height: 32px; border-radius: 50%;
+      background: #007aff; color: #fff; font-weight: bold;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 16px;
+    }
+    #install-box .icon-hint {
+      font-size: 22px; vertical-align: middle;
+    }
+    #install-box .note {
+      margin-top: 16px; font-size: 13px; color: #888;
+    }
+    #dismiss-btn {
+      margin-top: 18px; padding: 12px 36px; border: none; border-radius: 12px;
+      background: #007aff; color: #fff; font-size: 17px; font-weight: 600;
+      cursor: pointer; -webkit-tap-highlight-color: transparent;
+    }
+    #dismiss-btn:active { opacity: 0.8; }
+    #skip-link {
+      display: inline-block; margin-top: 12px;
+      font-size: 13px; color: #888; text-decoration: underline;
+      cursor: pointer;
+    }
   </style>
 </head>
 <body>
+
+  <!-- Install prompt — only shown in a browser, not when already installed -->
+  <div id="install-prompt">
+    <div id="install-box">
+      <h2>Install 1v1 Fighter</h2>
+      <p style="font-size:15px;color:#555;margin-bottom:6px;">
+        Play fullscreen like a real app!
+      </p>
+
+      <!-- iOS Safari instructions (default) -->
+      <div id="ios-steps">
+        <div class="step">
+          <span class="step-num">1</span>
+          <span>Tap the <strong>Share</strong> button <span class="icon-hint">&#x1F4E4;</span> at the bottom (or top) of your browser</span>
+        </div>
+        <div class="step">
+          <span class="step-num">2</span>
+          <span>Scroll down and tap <strong>"Add to Home Screen"</strong></span>
+        </div>
+        <div class="step">
+          <span class="step-num">3</span>
+          <span>Tap <strong>Add</strong> — done! Open it from your home screen</span>
+        </div>
+      </div>
+
+      <!-- Android / Chrome instructions -->
+      <div id="android-steps" style="display:none;">
+        <div class="step">
+          <span class="step-num">1</span>
+          <span>Tap the <strong>menu</strong> <span class="icon-hint">&#x22EE;</span> in your browser (top-right)</span>
+        </div>
+        <div class="step">
+          <span class="step-num">2</span>
+          <span>Tap <strong>"Add to Home screen"</strong> or <strong>"Install app"</strong></span>
+        </div>
+        <div class="step">
+          <span class="step-num">3</span>
+          <span>Tap <strong>Install</strong> — done! Open it from your home screen</span>
+        </div>
+      </div>
+
+      <button id="dismiss-btn">Got it!</button>
+      <br>
+      <span id="skip-link">Just play in the browser</span>
+      <p class="note">You can always install later.</p>
+    </div>
+  </div>
+
   <script type="module" src="./src/main.js"></script>
   <script>
     if ('serviceWorker' in navigator) {
@@ -31,6 +126,38 @@
         navigator.serviceWorker.register('sw.js');
       });
     }
+
+    // ── Install prompt logic ──
+    (function() {
+      var prompt = document.getElementById('install-prompt');
+      var dismissBtn = document.getElementById('dismiss-btn');
+      var skipLink = document.getElementById('skip-link');
+
+      // Detect if already running as installed PWA
+      var isStandalone =
+        window.navigator.standalone === true ||                     // iOS
+        window.matchMedia('(display-mode: standalone)').matches;    // Android/desktop
+
+      // Don't show if already installed or previously dismissed
+      if (isStandalone || localStorage.getItem('install-dismissed')) return;
+
+      // Show Android steps on Android, iOS steps otherwise
+      var isAndroid = /android/i.test(navigator.userAgent);
+      if (isAndroid) {
+        document.getElementById('ios-steps').style.display = 'none';
+        document.getElementById('android-steps').style.display = 'block';
+      }
+
+      // Show the prompt after a short delay (let the game canvas appear first)
+      setTimeout(function() { prompt.classList.add('visible'); }, 1200);
+
+      function dismiss() {
+        prompt.classList.remove('visible');
+        localStorage.setItem('install-dismissed', '1');
+      }
+      dismissBtn.addEventListener('click', dismiss);
+      skipLink.addEventListener('click', dismiss);
+    })();
   </script>
 </body>
 </html>
