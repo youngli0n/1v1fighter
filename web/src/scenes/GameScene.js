@@ -150,6 +150,13 @@ export class GameScene extends Phaser.Scene {
     } else if (this.state === 'round_over') {
       this.player1.reset();
       this.player2.reset();
+      // Regenerate walls and collectibles for the new round
+      this.walls = generateWalls();
+      const p1 = { x: this.player1.startX, y: this.player1.startY };
+      const p2 = { x: this.player2.startX, y: this.player2.startY };
+      this.collectibles = generateCollectibles(
+        this.walls, GAME_CONFIG.num_collectibles_per_match, p1, p2,
+      );
       this.ai = new AIPlayer(this.player2, this.player1, this.walls);
       this.gameOver = false;
       this.winner = null;
