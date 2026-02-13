@@ -81,28 +81,64 @@
       <p style="font-size:15px;color:#555;margin-bottom:6px;">
         Play fullscreen like a real app!
       </p>
+      <p id="browser-label" style="font-size:12px;color:#aaa;margin-bottom:10px;"></p>
 
-      <!-- iOS Safari instructions (default) -->
-      <div id="ios-steps">
+      <!-- Safari on iPad / iPhone -->
+      <div id="steps-safari" class="steps-set" style="display:none;">
         <div class="step">
           <span class="step-num">1</span>
-          <span>Tap the <strong>Share</strong> button <span class="icon-hint">&#x1F4E4;</span> at the bottom (or top) of your browser</span>
+          <span>Tap the <strong>Share</strong> button <span class="icon-hint" style="font-size:18px;">&#xFEFF;&#x1F4E4;&#xFE0E;</span> in Safari's top toolbar</span>
         </div>
         <div class="step">
           <span class="step-num">2</span>
-          <span>Scroll down and tap <strong>"Add to Home Screen"</strong></span>
+          <span><strong>Scroll down</strong> in the menu that appears and tap <strong>"Add to Home Screen"</strong></span>
         </div>
         <div class="step">
           <span class="step-num">3</span>
-          <span>Tap <strong>Add</strong> — done! Open it from your home screen</span>
+          <span>Tap <strong>Add</strong> in the top-right corner — done!</span>
         </div>
       </div>
 
-      <!-- Android / Chrome instructions -->
-      <div id="android-steps" style="display:none;">
+      <!-- Chrome on iPad / iPhone (CriOS) -->
+      <div id="steps-chrome-ios" class="steps-set" style="display:none;">
         <div class="step">
           <span class="step-num">1</span>
-          <span>Tap the <strong>menu</strong> <span class="icon-hint">&#x22EE;</span> in your browser (top-right)</span>
+          <span>Tap the <strong>Share</strong> button <span class="icon-hint" style="font-size:18px;">&#xFEFF;&#x1F4E4;&#xFE0E;</span> next to the address bar at the top</span>
+        </div>
+        <div class="step">
+          <span class="step-num">2</span>
+          <span><strong>Scroll down</strong> in the menu and tap <strong>"Add to Home Screen"</strong></span>
+        </div>
+        <div class="step">
+          <span class="step-num">3</span>
+          <span>Tap <strong>Add</strong> — done!</span>
+        </div>
+      </div>
+
+      <!-- Firefox / Edge / other browser on iOS — can't install, redirect to Safari -->
+      <div id="steps-other-ios" class="steps-set" style="display:none;">
+        <p style="font-size:15px;color:#c00;margin:10px 0;">
+          This browser doesn't support "Add to Home Screen."
+        </p>
+        <div class="step">
+          <span class="step-num">1</span>
+          <span>Copy this page's URL</span>
+        </div>
+        <div class="step">
+          <span class="step-num">2</span>
+          <span>Open it in <strong>Safari</strong></span>
+        </div>
+        <div class="step">
+          <span class="step-num">3</span>
+          <span>Then use Safari's <strong>Share</strong> button → <strong>"Add to Home Screen"</strong></span>
+        </div>
+      </div>
+
+      <!-- Chrome on Android -->
+      <div id="steps-chrome-android" class="steps-set" style="display:none;">
+        <div class="step">
+          <span class="step-num">1</span>
+          <span>Tap the <strong>menu</strong> <span class="icon-hint">&#x22EE;</span> (three dots) at the top-right of Chrome</span>
         </div>
         <div class="step">
           <span class="step-num">2</span>
@@ -110,8 +146,34 @@
         </div>
         <div class="step">
           <span class="step-num">3</span>
-          <span>Tap <strong>Install</strong> — done! Open it from your home screen</span>
+          <span>Tap <strong>Install</strong> — done!</span>
         </div>
+      </div>
+
+      <!-- Firefox on Android -->
+      <div id="steps-firefox-android" class="steps-set" style="display:none;">
+        <div class="step">
+          <span class="step-num">1</span>
+          <span>Tap the <strong>menu</strong> <span class="icon-hint">&#x22EE;</span> (three dots) at the top-right</span>
+        </div>
+        <div class="step">
+          <span class="step-num">2</span>
+          <span>Tap <strong>"Install"</strong></span>
+        </div>
+        <div class="step">
+          <span class="step-num">3</span>
+          <span>Tap <strong>Add to Home screen</strong> — done!</span>
+        </div>
+      </div>
+
+      <!-- Generic / desktop fallback -->
+      <div id="steps-desktop" class="steps-set" style="display:none;">
+        <p style="font-size:15px;color:#555;margin:10px 0;">
+          For the best experience, open this page on your <strong>phone or tablet</strong> and add it to your home screen.
+        </p>
+        <p style="font-size:14px;color:#888;margin:6px 0;">
+          On a computer you can bookmark this page instead.
+        </p>
       </div>
 
       <button id="dismiss-btn">Got it!</button>
@@ -129,34 +191,63 @@
       });
     }
 
-    // ── Install prompt logic ──
+    // ── Install prompt logic — detects browser and shows matching instructions ──
     (function() {
       var prompt = document.getElementById('install-prompt');
-      if (!prompt) return; // safety: element might not exist in stale cached HTML
+      if (!prompt) return;
 
       var dismissBtn = document.getElementById('dismiss-btn');
-      var skipLink = document.getElementById('skip-link');
+      var skipLink   = document.getElementById('skip-link');
 
-      // Detect if already running as installed PWA
+      // Already running as an installed PWA? Don't show.
       var isStandalone =
-        window.navigator.standalone === true ||                     // iOS
-        window.matchMedia('(display-mode: standalone)').matches;    // Android/desktop
+        window.navigator.standalone === true ||
+        window.matchMedia('(display-mode: standalone)').matches;
 
-      // Check URL for debug flag to clear localStorage
+      // ?reset-install in URL clears the "don't show again" flag (for testing)
       if (window.location.search.includes('reset-install')) {
         localStorage.removeItem('install-dismissed');
-        console.log('Install prompt reset — will show now');
       }
 
-      // Don't show if already installed or previously dismissed
       if (isStandalone || localStorage.getItem('install-dismissed')) return;
 
-      // Show Android steps on Android, iOS steps otherwise
-      var isAndroid = /android/i.test(navigator.userAgent);
-      if (isAndroid) {
-        document.getElementById('ios-steps').style.display = 'none';
-        document.getElementById('android-steps').style.display = 'block';
+      // ── Browser & platform detection ──
+      var ua = navigator.userAgent;
+      // iPad reports as "Macintosh" since iPadOS 13
+      var isIOS = /iPhone|iPad|iPod/.test(ua) ||
+                  (navigator.maxTouchPoints > 2 && /Macintosh/.test(ua));
+      var isAndroid = /Android/i.test(ua);
+      var isCriOS   = /CriOS/i.test(ua);            // Chrome on iOS
+      var isFxiOS   = /FxiOS/i.test(ua);            // Firefox on iOS
+      var isEdgiOS  = /EdgiOS/i.test(ua);            // Edge on iOS
+
+      // Pick which instruction set to reveal
+      var stepsId;
+      var label;
+
+      if (isIOS && !isCriOS && !isFxiOS && !isEdgiOS) {
+        stepsId = 'steps-safari';
+        label   = 'Detected: Safari';
+      } else if (isIOS && isCriOS) {
+        stepsId = 'steps-chrome-ios';
+        label   = 'Detected: Chrome on iOS';
+      } else if (isIOS) {
+        // Firefox, Edge, or any other iOS browser
+        stepsId = 'steps-other-ios';
+        label   = 'Detected: ' + (isFxiOS ? 'Firefox' : isEdgiOS ? 'Edge' : 'other browser') + ' on iOS';
+      } else if (isAndroid && /Firefox/i.test(ua)) {
+        stepsId = 'steps-firefox-android';
+        label   = 'Detected: Firefox on Android';
+      } else if (isAndroid) {
+        stepsId = 'steps-chrome-android';
+        label   = 'Detected: Chrome on Android';
+      } else {
+        stepsId = 'steps-desktop';
+        label   = 'Desktop browser';
       }
+
+      document.getElementById(stepsId).style.display = 'block';
+      document.getElementById('browser-label').textContent = label;
 
       // Show the prompt after a short delay (let the game canvas appear first)
       setTimeout(function() { prompt.classList.add('visible'); }, 1200);
