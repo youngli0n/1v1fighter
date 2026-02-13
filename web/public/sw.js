@@ -1,43 +1,34 @@
-const CACHE_NAME = '1v1fighter-v2';
-const ASSETS = [
-  '/1v1fighter/',
-  '/1v1fighter/index.html',
-  '/1v1fighter/manifest.json',
-];
+const CACHE_NAME = '1v1fighter-v3';
 
 self.addEventListener('install', (event) => {
-  event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(ASSETS))
-  );
+  // Take over immediately — don't wait for old tabs to close
   self.skipWaiting();
 });
 
 self.addEventListener('activate', (event) => {
+  // Delete every old cache
   event.waitUntil(
     caches.keys().then((keys) =>
       Promise.all(keys.filter((k) => k !== CACHE_NAME).map((k) => caches.delete(k)))
     )
   );
+  // Start controlling all open tabs right away
   self.clients.claim();
 });
 
 self.addEventListener('fetch', (event) => {
-  // Navigation requests (HTML pages) — network first so updates arrive immediately
-  if (event.request.mode === 'navigate') {
-    event.respondWith(
-      fetch(event.request)
-        .then((response) => {
-          const clone = response.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
-          return response;
-        })
-        .catch(() => caches.match(event.request)) // offline fallback
-    );
-    return;
-  }
-
-  // Everything else (JS bundles, images, etc.) — cache first
+  // Network-first for EVERYTHING.
+  // The cache is only used as an offline fallback.
   event.respondWith(
-    caches.match(event.request).then((cached) => cached || fetch(event.request))
+    fetch(event.request)
+      .then((response) => {
+        // Cache a copy so the app works offline next time
+        if (response.ok && event.request.method === 'GET') {
+          const clone = response.clone();
+          caches.open(CACHE_NAME).then((c) => c.put(event.request, clone));
+        }
+        return response;
+      })
+      .catch(() => caches.match(event.request))
   );
 });
