@@ -74,9 +74,51 @@
       font-size: 13px; color: #888; text-decoration: underline;
       cursor: pointer;
     }
+
+    /* ── Rotate-to-landscape prompt ── */
+    #rotate-prompt {
+      display: none;
+      position: fixed; inset: 0; z-index: 10000;
+      background: #111;
+      color: #fff;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      font-family: -apple-system, Arial, sans-serif;
+      text-align: center;
+      padding: 24px;
+    }
+    #rotate-prompt .rotate-icon {
+      width: 80px; height: 80px; margin-bottom: 20px;
+      animation: rock 1.5s ease-in-out infinite;
+    }
+    @keyframes rock {
+      0%, 100% { transform: rotate(0deg); }
+      25%      { transform: rotate(90deg); }
+      75%      { transform: rotate(90deg); }
+    }
+    #rotate-prompt h2 { margin: 0 0 8px; font-size: 22px; }
+    #rotate-prompt p  { margin: 0; font-size: 15px; color: #aaa; }
+
+    /* Show only when a phone/tablet is in portrait */
+    @media (orientation: portrait) and (max-width: 900px) {
+      #rotate-prompt { display: flex; }
+    }
   </style>
 </head>
 <body>
+
+  <!-- Rotate prompt — shown when a phone is held in portrait -->
+  <div id="rotate-prompt">
+    <svg class="rotate-icon" viewBox="0 0 100 100" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="25" y="10" width="50" height="80" rx="8"/>
+      <line x1="45" y1="82" x2="55" y2="82"/>
+      <path d="M78 55 C 90 55, 90 35, 78 35" stroke="#aaa"/>
+      <polyline points="76,30 78,35 83,33" stroke="#aaa"/>
+    </svg>
+    <h2>Rotate Your Phone</h2>
+    <p>This game is played in landscape mode</p>
+  </div>
 
   <!-- Install prompt — only shown in a browser, not when already installed -->
   <div id="install-prompt">

@@ -75,66 +75,16 @@ export const COLORS = {
 };
 
 /**
- * Minimum tile size in pixels. If the default 40×20 grid would make
- * tiles smaller than this, we shrink the grid (fewer but bigger tiles)
- * so the game stays playable on small phone screens.
- */
-const MIN_TILE_PX = 18;
-
-/** Once the grid has been set on first boot, don't change it on resize. */
-let _gridLocked = false;
-
-/**
  * Call once at boot (and again on resize) to calculate tile_size,
  * panel height, etc. based on the actual visible dimensions.
  *
- * On the very first call, if the screen is too small for the default
- * 40×20 grid, we reduce tiles_width / tiles_height so each tile is
- * at least MIN_TILE_PX pixels. The 2 : 1 width-to-height ratio is kept
- * so the game board still looks right.
+ * The grid is always 40 × 20 tiles so every device — phone or tablet —
+ * plays on the exact same field.  Only the pixel size of each tile
+ * changes to fill the available screen.
  */
 export function initConfig(screenW, screenH) {
   const minStatsHeight = 60;
 
-  // ── First boot: adapt grid for small screens ──────────────
-  if (!_gridLocked) {
-    _gridLocked = true;
-
-    const testW = Math.floor(screenW / GAME_CONFIG.tiles_width);
-    const testH = Math.floor((screenH - minStatsHeight) / GAME_CONFIG.tiles_height);
-
-    if (Math.min(testW, testH) < MIN_TILE_PX) {
-      // How many tiles fit at the minimum size?
-      let tilesW = Math.floor(screenW / MIN_TILE_PX);
-      let tilesH = Math.floor((screenH - minStatsHeight) / MIN_TILE_PX);
-
-      // Keep the board's 2 : 1 aspect ratio
-      if (tilesW > tilesH * 2) {
-        tilesW = tilesH * 2;
-      } else {
-        tilesH = Math.floor(tilesW / 2);
-      }
-
-      // Even numbers keep the centre line clean
-      tilesW -= tilesW % 2;
-      tilesH -= tilesH % 2;
-
-      // Safety minimums
-      tilesW = Math.max(16, tilesW);
-      tilesH = Math.max(8, tilesH);
-
-      GAME_CONFIG.tiles_width = tilesW;
-      GAME_CONFIG.tiles_height = tilesH;
-
-      // Scale gameplay settings so the smaller board doesn't feel cramped
-      const areaRatio = (tilesW * tilesH) / (40 * 20);
-      GAME_CONFIG.num_walls_per_side = Math.max(2, Math.round(5 * areaRatio));
-      GAME_CONFIG.wall_min_distance = Math.max(2, Math.round(5 * Math.sqrt(areaRatio)));
-      GAME_CONFIG.num_collectibles_per_match = Math.max(4, Math.round(10 * areaRatio));
-    }
-  }
-
-  // ── Always recalculate pixel sizes ────────────────────────
   const tileByWidth  = Math.floor(screenW / GAME_CONFIG.tiles_width);
   const tileByHeight = Math.floor((screenH - minStatsHeight) / GAME_CONFIG.tiles_height);
   const tileSize = Math.max(1, Math.min(tileByWidth, tileByHeight));
