@@ -1,0 +1,17 @@
+{
+  "name": "1v1 Fighter",
+  "short_name": "1v1 Fighter",
+  "description": "A competitive 1v1 racing combat game",
+  "start_url": "/1v1fighter/",
+  "display": "standalone",
+  "orientation": "landscape",
+  "background_color": "#ffffff",
+  "theme_color": "#ffffff",
+  "icons": [
+    {
+      "src": "icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}
