@@ -526,11 +526,12 @@ export class GameScene extends Phaser.Scene {
     g.fillRect(0, 0, sw, sh);
 
     const cx = sw / 2;
-    const baseSize = Math.min(24, sh / 20);
-    let y = sh * 0.08;
+    // Scale text more aggressively on small screens so everything fits
+    const baseSize = Math.min(24, sh / 28);
+    let y = sh * 0.05;
 
-    this._overlayText(cx, y, 'How to Play', baseSize * 1.6, '#000', true);
-    y += baseSize * 2.5;
+    this._overlayText(cx, y, 'How to Play', baseSize * 1.5, '#000', true);
+    y += baseSize * 2;
 
     const lines = [
       { t: '1. Race to the centre line first!', style: 'heading' },
@@ -538,24 +539,23 @@ export class GameScene extends Phaser.Scene {
       { t: '2. Use walls for cover', style: 'heading' },
       { t: 'Gray walls block bullets — hide behind them.', style: 'body' },
       { t: '3. Touch controls', style: 'heading' },
-      { t: 'Right thumb: drag joystick to MOVE', style: 'body' },
-      { t: 'Left thumb: SHOOT or hold SHIELD', style: 'body' },
+      { t: 'Joystick = MOVE | SHOOT / hold SHIELD', style: 'body' },
       { t: '4. Getting hit slows you down', style: 'heading' },
       { t: `Speed drops to ${GAME_CONFIG.slow_factor * 100}% for ${GAME_CONFIG.slow_duration}s. Attacker speeds up!`, style: 'body' },
       { t: '5. Blocking gives a speed boost', style: 'heading' },
-      { t: `Each block: +${GAME_CONFIG.shield_boost_amount * 100}% for ${GAME_CONFIG.shield_boost_duration}s`, style: 'body' },
+      { t: `+${GAME_CONFIG.shield_boost_amount * 100}% per block for ${GAME_CONFIG.shield_boost_duration}s`, style: 'body' },
       { t: `6. Win ${GAME_CONFIG.rounds_to_win} rounds to win the match`, style: 'heading' },
     ];
 
     for (const { t: text, style } of lines) {
-      if (style === 'heading') y += baseSize * 0.6;
-      const size = style === 'heading' ? baseSize * 1.1 : baseSize * 0.9;
-      this._overlayText(sw * 0.08, y, text, size, '#000');
-      y += size * 1.4;
+      if (style === 'heading') y += baseSize * 0.3;
+      const size = style === 'heading' ? baseSize * 1.05 : baseSize * 0.85;
+      this._overlayText(sw * 0.06, y, text, size, '#000');
+      y += size * 1.25;
     }
 
-    y = sh * 0.88;
-    this._overlayText(cx, y, 'Tap anywhere to start', baseSize * 1.2, '#444', true);
+    y = sh * 0.90;
+    this._overlayText(cx, y, 'Tap anywhere to start', baseSize * 1.1, '#444', true);
   }
 
   _buildRoundOverlay() {
@@ -648,13 +648,13 @@ export class GameScene extends Phaser.Scene {
       this._overlayText(cx, mpY, 'MATCH POINT', 18, '#fff', true);
     }
 
-    const boxW = sw * 0.25;
-    const boxH = boardH * 0.3;
+    const boxW = Math.min(sw * 0.25, 160);
+    const boxH = Math.min(boardH * 0.3, 100);
     this.overlayGfx.fillStyle(0x000000, 1);
     this.overlayGfx.fillRect(cx - boxW / 2, cy - boxH / 2, boxW, boxH);
 
     const cdText = gs.countdownTicks > 0 ? String(gs.countdownTicks) : 'GO!';
-    this._overlayText(cx, cy, cdText, Math.min(72, boardH / 3), '#ffffff', true);
+    this._overlayText(cx, cy, cdText, Math.min(60, boardH / 4), '#ffffff', true);
   }
 
   _overlayText(x, y, str, size, color, centre = false) {

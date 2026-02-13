@@ -30,13 +30,50 @@ export class StatsPanel {
 
     // Divider
     this.gfx.lineStyle(1, COLORS.text, 0.3);
-    this.gfx.lineBetween(panelW / 2, panelY + 8, panelW / 2, panelY + panelH - 8);
+    this.gfx.lineBetween(panelW / 2, panelY + 4, panelW / 2, panelY + panelH - 4);
 
     const sectionW = panelW / 2;
-    const pad = Math.max(10, panelW / 80);
+    const pad = Math.max(8, panelW / 80);
 
-    this._drawPlayerStats(player1, 0, sectionW, pad, panelY, panelH, currentTime, true);
-    this._drawPlayerStats(player2, sectionW, sectionW, pad, panelY, panelH, currentTime, false);
+    // Use compact single-row layout on small screens (phone landscape)
+    if (panelH < 50) {
+      this._drawCompactStats(player1, 0, sectionW, pad, panelY, panelH, currentTime, true);
+      this._drawCompactStats(player2, sectionW, sectionW, pad, panelY, panelH, currentTime, false);
+    } else {
+      this._drawPlayerStats(player1, 0, sectionW, pad, panelY, panelH, currentTime, true);
+      this._drawPlayerStats(player2, sectionW, sectionW, pad, panelY, panelH, currentTime, false);
+    }
+  }
+
+  /** Compact single-row layout: just a label and progress bar. */
+  _drawCompactStats(player, sectionX, sectionW, pad, panelY, panelH, t, isP1) {
+    const x = sectionX + pad;
+    const fontSize = Math.min(12, panelH * 0.4);
+    const barH = Math.min(10, panelH * 0.35);
+    const progress = Math.min(100, player.getProgress());
+
+    // Player label
+    const label = `P${isP1 ? 1 : 2}`;
+    const labelTxt = this.scene.add.text(x, panelY + panelH / 2, label, {
+      fontSize: `${fontSize}px`, fontFamily: 'Arial', color: '#000', fontStyle: 'bold',
+    }).setOrigin(0, 0.5).setDepth(51);
+    this.texts.push(labelTxt);
+
+    // Progress bar next to label
+    const barX = x + labelTxt.width + 6;
+    const barW = Math.min(sectionW - pad * 2 - labelTxt.width - 40, sectionW * 0.5);
+    const barY = panelY + (panelH - barH) / 2;
+
+    this.gfx.fillStyle(COLORS.progress_bar_bg, 1);
+    this.gfx.fillRect(barX, barY, barW, barH);
+    this.gfx.fillStyle(COLORS.progress_bar_fill, 1);
+    this.gfx.fillRect(barX, barY, barW * (progress / 100), barH);
+
+    // Percentage text
+    const pTxt = this.scene.add.text(barX + barW + 4, panelY + panelH / 2, `${Math.round(progress)}%`, {
+      fontSize: `${fontSize}px`, fontFamily: 'Arial', color: '#000',
+    }).setOrigin(0, 0.5).setDepth(51);
+    this.texts.push(pTxt);
   }
 
   _drawPlayerStats(player, sectionX, sectionW, pad, panelY, panelH, t, isP1) {

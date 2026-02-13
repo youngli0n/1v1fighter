@@ -83,7 +83,7 @@ export const COLORS = {
  * changes to fill the available screen.
  */
 export function initConfig(screenW, screenH) {
-  const minStatsHeight = 60;
+  const minStatsHeight = screenH < 500 ? 32 : 60;
 
   const tileByWidth  = Math.floor(screenW / GAME_CONFIG.tiles_width);
   const tileByHeight = Math.floor((screenH - minStatsHeight) / GAME_CONFIG.tiles_height);

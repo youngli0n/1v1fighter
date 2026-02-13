@@ -30,24 +30,24 @@ export class LobbyScene extends Phaser.Scene {
     this.cameras.main.setBackgroundColor('#111111');
 
     // Title
-    this.add.text(cx, sh * 0.10, '1v1 Fighter', {
-      fontSize: `${Math.min(48, sw / 14)}px`,
+    this.add.text(cx, sh * 0.08, '1v1 Fighter', {
+      fontSize: `${Math.min(48, sw / 12)}px`,
       fontFamily: 'Arial, sans-serif',
       color: '#ffffff',
       fontStyle: 'bold',
     }).setOrigin(0.5);
 
-    this.add.text(cx, sh * 0.18, 'Multiplayer Arena', {
-      fontSize: `${Math.min(20, sw / 35)}px`,
+    this.add.text(cx, sh * 0.17, 'Multiplayer Arena', {
+      fontSize: `${Math.min(20, sw / 30)}px`,
       fontFamily: 'Arial, sans-serif',
       color: '#888888',
     }).setOrigin(0.5);
 
     // ── Buttons ──────────────────────────────────────────────
-    const btnW = Math.min(280, sw * 0.4);
-    const btnH = Math.min(56, sh * 0.09);
-    const gap = Math.min(18, sh * 0.03);
-    let y = sh * 0.32;
+    const btnW = Math.min(300, sw * 0.5);
+    const btnH = Math.min(56, sh * 0.11);
+    const gap = Math.min(14, sh * 0.025);
+    let y = sh * 0.28;
 
     this._makeButton(cx, y, btnW, btnH, 'Play vs AI', '#22aa22', () => this._startAI());
     y += btnH + gap;
