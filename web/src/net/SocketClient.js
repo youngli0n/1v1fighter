@@ -16,7 +16,7 @@ const RELAY_URL =
   import.meta.env.VITE_RELAY_URL ||
   (window.location.hostname === 'localhost'
     ? 'http://localhost:3000'
-    : 'https://one-v1fighter-relay.onrender.com');
+    : 'https://onev1fighter-relay.onrender.com');
 
 export class SocketClient {
   constructor() {
