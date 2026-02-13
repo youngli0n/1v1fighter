@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: 1v1fighter-relay
+    runtime: node
+    plan: free
+    buildCommand: npm install
+    startCommand: node index.js
+    rootDir: server
+    envVars:
+      - key: NODE_ENV
+        value: production

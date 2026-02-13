@@ -1,7 +1,9 @@
 import Phaser from 'phaser';
 import { BootScene } from './scenes/BootScene.js';
+import { LobbyScene } from './scenes/LobbyScene.js';
 import { GameScene } from './scenes/GameScene.js';
 import { initConfig } from './config.js';
+import { SocketClient } from './net/SocketClient.js';
 
 /**
  * Return the actual visible viewport size.
@@ -36,7 +38,7 @@ function boot() {
     input: {
       activePointers: 3,
     },
-    scene: [BootScene, GameScene],
+    scene: [BootScene, LobbyScene, GameScene],
   };
 
   const game = new Phaser.Game(config);

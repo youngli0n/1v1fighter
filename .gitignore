@@ -35,6 +35,7 @@ ENV/
 node_modules/
 web/dist/
 web/.vite/
+server/node_modules/
 
 # Cursor
 .cursor/

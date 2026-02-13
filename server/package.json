@@ -1,0 +1,13 @@
+{
+  "name": "1v1fighter-relay",
+  "version": "1.0.0",
+  "description": "Lightweight WebSocket relay server for 1v1 Fighter multiplayer",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "express": "^4.21.0",
+    "socket.io": "^4.8.0"
+  }
+}
