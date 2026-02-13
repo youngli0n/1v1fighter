@@ -11,7 +11,11 @@ export class BootScene extends Phaser.Scene {
   }
 
   create() {
-    initConfig(this.scale.width, this.scale.height);
+    // Use visualViewport for accurate dimensions on iOS Safari
+    const vv = window.visualViewport;
+    const w = vv ? Math.round(vv.width) : this.scale.width;
+    const h = vv ? Math.round(vv.height) : this.scale.height;
+    initConfig(w, h);
     this.scene.start('GameScene', { newMatch: true });
   }
 }

@@ -435,4 +435,37 @@ export class GameScene extends Phaser.Scene {
     this.overlayTexts.push(t);
     return t;
   }
+
+  /* ───────── resize handler ───────── */
+
+  /**
+   * Called when the window resizes (e.g., when installed as PWA, orientation change).
+   * Repositions all UI elements to fit the new screen size.
+   */
+  handleResize() {
+    const ts = GAME_CONFIG.tile_size;
+    const boardH = GAME_CONFIG.tiles_height * ts;
+    const sw = this.scale.width;
+
+    // Reposition joystick
+    const jRadius = Math.min(70, sw * 0.07);
+    this.joystick.reposition(
+      sw - jRadius - 30,
+      boardH - jRadius - 20,
+      jRadius,
+    );
+
+    // Reposition action buttons
+    const btnW = Math.min(90, sw * 0.09);
+    const btnH = Math.min(60, boardH * 0.14);
+    const btnCentreX = 30 + btnW / 2;
+    const btnTopY = boardH - btnH * 2 - 12 - 20;
+    this.actionButtons.reposition(btnCentreX, btnTopY, btnW, btnH);
+
+    // Stats panel will auto-adjust since it reads from GAME_CONFIG each frame
+    // Redraw any overlay that's currently showing
+    if (this.state !== 'playing' && this.state !== 'countdown') {
+      this._setState(this.state);
+    }
+  }
 }

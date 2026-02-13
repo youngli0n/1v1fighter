@@ -75,19 +75,27 @@ export const COLORS = {
 };
 
 /**
- * Call once at boot to calculate tile_size, panel height, etc.
- * based on the actual screen dimensions.
+ * Call once at boot (and again on resize) to calculate tile_size,
+ * panel height, etc. based on the actual visible dimensions.
+ *
+ * The key constraint is:
+ *   board (tiles_height * tile_size) + stats panel  <=  screenH
+ *
+ * We guarantee at least `minStatsHeight` pixels for the stats panel
+ * so it never gets clipped by Safari's toolbar.
  */
 export function initConfig(screenW, screenH) {
-  let tileSize = Math.floor(screenW / GAME_CONFIG.tiles_width);
   const minStatsHeight = 80;
 
-  if (GAME_CONFIG.tiles_height * tileSize + minStatsHeight > screenH) {
-    tileSize = Math.floor((screenH - minStatsHeight) / GAME_CONFIG.tiles_height);
-  }
+  // Tile size limited by BOTH the width AND the available height
+  let tileByWidth = Math.floor(screenW / GAME_CONFIG.tiles_width);
+  let tileByHeight = Math.floor((screenH - minStatsHeight) / GAME_CONFIG.tiles_height);
+  let tileSize = Math.max(1, Math.min(tileByWidth, tileByHeight));
+
+  const boardH = GAME_CONFIG.tiles_height * tileSize;
 
   GAME_CONFIG.tile_size = tileSize;
-  GAME_CONFIG.stats_panel_height = screenH - GAME_CONFIG.tiles_height * tileSize;
+  GAME_CONFIG.stats_panel_height = Math.max(minStatsHeight, screenH - boardH);
   GAME_CONFIG.game_width = screenW;
   GAME_CONFIG.game_height = screenH;
 }

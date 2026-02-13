@@ -92,6 +92,15 @@ export class VirtualJoystick {
     this.gfx.fillCircle(kx, ky, this.knobRadius);
   }
 
+  /** Update position when screen resizes */
+  reposition(x, y, radius) {
+    this.baseX = x;
+    this.baseY = y;
+    this.radius = radius;
+    this.knobRadius = radius * 0.4;
+    this.draw();
+  }
+
   destroy() {
     this.scene.input.off('pointerdown', this.onDown, this);
     this.scene.input.off('pointermove', this.onMove, this);

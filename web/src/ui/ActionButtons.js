@@ -104,22 +104,51 @@ export class ActionButtons {
   /** Add text labels — call after creation so we can use Phaser text objects. */
   addLabels() {
     const style = { fontSize: '16px', fontFamily: 'Arial', color: '#000', fontStyle: 'bold' };
-    this.scene.add.text(
+    this.shootLabel = this.scene.add.text(
       this.shootRect.x + this.btnW / 2,
       this.shootRect.y + this.btnH / 2,
       'SHOOT', { ...style, color: '#cc0000' },
     ).setOrigin(0.5).setDepth(101);
 
-    this.scene.add.text(
+    this.shieldLabel = this.scene.add.text(
       this.shieldRect.x + this.btnW / 2,
       this.shieldRect.y + this.btnH / 2,
       'SHIELD', { ...style, color: '#0066cc' },
     ).setOrigin(0.5).setDepth(101);
   }
 
+  /** Update position when screen resizes */
+  reposition(centreX, topY, btnW, btnH) {
+    this.btnW = btnW;
+    this.btnH = btnH;
+    const x = centreX - btnW / 2;
+    const gap = 12;
+
+    this.shootRect = { x, y: topY, w: btnW, h: btnH };
+    this.shieldRect = { x, y: topY + btnH + gap, w: btnW, h: btnH };
+
+    // Update label positions if they exist
+    if (this.shootLabel) {
+      this.shootLabel.setPosition(
+        this.shootRect.x + this.btnW / 2,
+        this.shootRect.y + this.btnH / 2,
+      );
+    }
+    if (this.shieldLabel) {
+      this.shieldLabel.setPosition(
+        this.shieldRect.x + this.btnW / 2,
+        this.shieldRect.y + this.btnH / 2,
+      );
+    }
+
+    this.draw();
+  }
+
   destroy() {
     this.scene.input.off('pointerdown', this.onDown, this);
     this.scene.input.off('pointerup', this.onUp, this);
     this.gfx.destroy();
+    if (this.shootLabel) this.shootLabel.destroy();
+    if (this.shieldLabel) this.shieldLabel.destroy();
   }
 }

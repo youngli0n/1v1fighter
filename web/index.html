@@ -12,9 +12,11 @@
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     html, body {
-      width: 100%; height: 100%;
+      width: 100%;
+      height: 100vh;            /* fallback for older browsers */
+      height: 100dvh;           /* dynamic viewport height — adjusts for Safari toolbar */
       overflow: hidden;
-      background: #fff;
+      background: #000;
       touch-action: none;
       -webkit-touch-callout: none;
       -webkit-user-select: none;
@@ -130,6 +132,8 @@
     // ── Install prompt logic ──
     (function() {
       var prompt = document.getElementById('install-prompt');
+      if (!prompt) return; // safety: element might not exist in stale cached HTML
+
       var dismissBtn = document.getElementById('dismiss-btn');
       var skipLink = document.getElementById('skip-link');
 
@@ -137,6 +141,12 @@
       var isStandalone =
         window.navigator.standalone === true ||                     // iOS
         window.matchMedia('(display-mode: standalone)').matches;    // Android/desktop
+
+      // Check URL for debug flag to clear localStorage
+      if (window.location.search.includes('reset-install')) {
+        localStorage.removeItem('install-dismissed');
+        console.log('Install prompt reset — will show now');
+      }
 
       // Don't show if already installed or previously dismissed
       if (isStandalone || localStorage.getItem('install-dismissed')) return;
