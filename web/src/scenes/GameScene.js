@@ -73,7 +73,7 @@ export class GameScene extends Phaser.Scene {
     const boardH = H * ts;
     const sw = this.scale.width;
 
-    const jRadius = Math.min(70, sw * 0.07);
+    const jRadius = Math.min(75, Math.max(50, sw * 0.1));
     this.joystick = new VirtualJoystick(
       this,
       sw - jRadius - 30,
@@ -81,8 +81,8 @@ export class GameScene extends Phaser.Scene {
       jRadius,
     );
 
-    const btnW = Math.min(90, sw * 0.09);
-    const btnH = Math.min(60, boardH * 0.14);
+    const btnW = Math.min(100, Math.max(65, sw * 0.12));
+    const btnH = Math.min(55, Math.max(38, boardH * 0.15));
     const gap = 12;
     const btnCentreX = 30 + btnW / 2;
     const btnTopY = boardH - btnH * 2 - gap - 20;
@@ -676,11 +676,11 @@ export class GameScene extends Phaser.Scene {
     const boardH = GAME_CONFIG.tiles_height * ts;
     const sw = this.scale.width;
 
-    const jRadius = Math.min(70, sw * 0.07);
+    const jRadius = Math.min(75, Math.max(50, sw * 0.1));
     this.joystick.reposition(sw - jRadius - 30, boardH - jRadius - 20, jRadius);
 
-    const btnW = Math.min(90, sw * 0.09);
-    const btnH = Math.min(60, boardH * 0.14);
+    const btnW = Math.min(100, Math.max(65, sw * 0.12));
+    const btnH = Math.min(55, Math.max(38, boardH * 0.15));
     const btnCentreX = 30 + btnW / 2;
     const btnTopY = boardH - btnH * 2 - 12 - 20;
     this.actionButtons.reposition(btnCentreX, btnTopY, btnW, btnH);

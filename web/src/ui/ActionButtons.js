@@ -103,7 +103,8 @@ export class ActionButtons {
 
   /** Add text labels — call after creation so we can use Phaser text objects. */
   addLabels() {
-    const style = { fontSize: '16px', fontFamily: 'Arial', color: '#000', fontStyle: 'bold' };
+    const fs = Math.max(13, Math.min(18, Math.round(this.btnW * 0.2)));
+    const style = { fontSize: `${fs}px`, fontFamily: 'Arial', color: '#000', fontStyle: 'bold' };
     this.shootLabel = this.scene.add.text(
       this.shootRect.x + this.btnW / 2,
       this.shootRect.y + this.btnH / 2,
