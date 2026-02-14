@@ -583,6 +583,31 @@ export class LobbyScene extends Phaser.Scene {
     this._buildLobbyUI();
   }
 
+  /** Leave the lobby and go back to the main menu */
+  _leaveLobby() {
+    // Disconnect from the server (this also notifies the other player)
+    this.net.disconnect();
+
+    // Destroy lobby UI
+    this._lobbyObjects.forEach(obj => obj.destroy());
+    this._lobbyObjects = [];
+    if (this._playerCardObjects) {
+      this._playerCardObjects.forEach(obj => obj.destroy());
+      this._playerCardObjects = [];
+    }
+
+    // Reset lobby state
+    this._state = 'menu';
+    this._myRole = null;
+    this._peerProfile = null;
+    this._myReady = false;
+    this._peerReady = false;
+    this._roomCode = null;
+
+    // Show the menu again
+    this._menuObjects.forEach(obj => obj.setVisible(true));
+  }
+
   _buildLobbyUI() {
     const { sw, sh, cx } = this;
 
@@ -615,6 +640,12 @@ export class LobbyScene extends Phaser.Scene {
       fontStyle: 'bold',
     }).setOrigin(0.5);
     this._lobbyObjects.push(vsText);
+
+    // Leave button — bottom-left so you can go back to the menu
+    const leaveObjs = this._makeButton(
+      90, sh * 0.88, 120, 40, '← Leave', '#aa3333', () => this._leaveLobby()
+    );
+    this._lobbyObjects.push(...leaveObjs);
 
     // Player cards — these get rebuilt by _refreshLobbyCards
     this._playerCardObjects = [];
