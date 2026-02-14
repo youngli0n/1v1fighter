@@ -10,6 +10,13 @@
   <link rel="manifest" href="manifest.json">
   <link rel="apple-touch-icon" href="icons/icon-192.png">
   <style>
+    /* Expose safe-area-inset values as CSS custom properties so JS can read them */
+    :root {
+      --sat: env(safe-area-inset-top, 0px);
+      --sar: env(safe-area-inset-right, 0px);
+      --sab: env(safe-area-inset-bottom, 0px);
+      --sal: env(safe-area-inset-left, 0px);
+    }
     * { margin: 0; padding: 0; box-sizing: border-box; }
     html, body {
       width: 100%;

@@ -28,11 +28,13 @@ export class SocketClient {
     this.onRoomCreated = null;   // (code) => {}
     this.onJoined = null;        // (code) => {}
     this.onJoinError = null;     // (message) => {}
-    this.onGuestJoined = null;   // () => {}
+    this.onGuestJoined = null;   // (profile) => {}  — host receives guest's profile
     this.onGameStart = null;     // (data) => {}  — guest receives initial game data
     this.onGameState = null;     // (data) => {}  — guest receives frame state
     this.onGuestInput = null;    // (data) => {}  — host receives guest inputs
     this.onPeerDisconnected = null; // () => {}
+    this.onPeerProfile = null;   // (profile) => {}  — receive the other player's profile
+    this.onPeerReady = null;     // () => {}  — the other player pressed Ready
   }
 
   /** Connect to the relay server. Returns a promise that resolves when connected. */
@@ -74,8 +76,16 @@ export class SocketClient {
         this.onJoinError?.(message);
       });
 
-      this.socket.on('guest_joined', () => {
-        this.onGuestJoined?.();
+      this.socket.on('guest_joined', (data) => {
+        this.onGuestJoined?.(data?.profile);
+      });
+
+      this.socket.on('peer_profile', (data) => {
+        this.onPeerProfile?.(data?.profile);
+      });
+
+      this.socket.on('peer_ready', () => {
+        this.onPeerReady?.();
       });
 
       this.socket.on('game_start', (data) => {
@@ -98,12 +108,17 @@ export class SocketClient {
 
   // ── Actions ─────────────────────────────────────────────────
 
-  createRoom() {
-    this.socket.emit('create_room');
+  createRoom(profile) {
+    this.socket.emit('create_room', { profile });
   }
 
-  joinRoom(code) {
-    this.socket.emit('join_room', { code: code.toUpperCase() });
+  joinRoom(code, profile) {
+    this.socket.emit('join_room', { code: code.toUpperCase(), profile });
+  }
+
+  /** Tell the server you're ready to play */
+  sendReady() {
+    this.socket.emit('player_ready');
   }
 
   /** Host sends initial game data (walls, collectibles) to guest */

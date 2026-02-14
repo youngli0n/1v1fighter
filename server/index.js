@@ -49,9 +49,16 @@ io.on('connection', (socket) => {
   console.log(`+ connect  ${socket.id}`);
 
   // ── Host creates a room ──────────────────────────────────
-  socket.on('create_room', () => {
+  socket.on('create_room', ({ profile } = {}) => {
     const code = makeCode();
-    rooms.set(code, { hostId: socket.id, guestId: null });
+    rooms.set(code, {
+      hostId: socket.id,
+      guestId: null,
+      hostProfile: profile || null,
+      guestProfile: null,
+      hostReady: false,
+      guestReady: false,
+    });
     socket.join(code);
     socket.data.room = code;
     socket.data.role = 'host';
@@ -60,7 +67,7 @@ io.on('connection', (socket) => {
   });
 
   // ── Guest joins a room ───────────────────────────────────
-  socket.on('join_room', ({ code }) => {
+  socket.on('join_room', ({ code, profile } = {}) => {
     const room = rooms.get(code);
     if (!room) {
       socket.emit('join_error', { message: 'Room not found' });
@@ -72,14 +79,32 @@ io.on('connection', (socket) => {
     }
 
     room.guestId = socket.id;
+    room.guestProfile = profile || null;
     socket.join(code);
     socket.data.room = code;
     socket.data.role = 'guest';
 
-    // Tell both sides the game can begin
-    io.to(room.hostId).emit('guest_joined');
+    // Send guest's profile to host, and host's profile to guest
+    io.to(room.hostId).emit('guest_joined', { profile: room.guestProfile });
     socket.emit('joined', { code });
+    socket.emit('peer_profile', { profile: room.hostProfile });
     console.log(`  room ${code} guest joined: ${socket.id}`);
+  });
+
+  // ── Player signals they are ready ──────────────────────
+  socket.on('player_ready', () => {
+    const code = socket.data.room;
+    const room = code ? rooms.get(code) : null;
+    if (!room) return;
+
+    if (socket.data.role === 'host') {
+      room.hostReady = true;
+      if (room.guestId) io.to(room.guestId).emit('peer_ready');
+    } else if (socket.data.role === 'guest') {
+      room.guestReady = true;
+      io.to(room.hostId).emit('peer_ready');
+    }
+    console.log(`  room ${code} — ${socket.data.role} is ready`);
   });
 
   // ── Host sends initial game data (walls, collectibles) ──
@@ -114,6 +139,9 @@ io.on('connection', (socket) => {
         rooms.delete(code);
       } else if (socket.data.role === 'guest') {
         room.guestId = null;
+        room.guestProfile = null;
+        room.guestReady = false;
+        room.hostReady = false;  // reset host ready too since guest left
         io.to(room.hostId).emit('peer_disconnected');
       }
       console.log(`  room ${code} — ${socket.data.role} disconnected`);
