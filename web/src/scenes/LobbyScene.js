@@ -182,9 +182,9 @@ export class LobbyScene extends Phaser.Scene {
     const backdropZone = this.add.zone(cx, sh / 2, sw, sh).setInteractive();
     this._editOverlayObjects.push(backdropZone);
 
-    // Panel
+    // Panel — use almost full height on small screens
     const panelW = Math.min(360, sw * 0.85);
-    const panelH = Math.min(420, sh * 0.75);
+    const panelH = Math.min(420, sh * 0.92);
     const panelX = cx - panelW / 2;
     const panelY = sh / 2 - panelH / 2;
 
@@ -195,10 +195,18 @@ export class LobbyScene extends Phaser.Scene {
     panel.strokeRoundedRect(panelX, panelY, panelW, panelH, 16);
     this._editOverlayObjects.push(panel);
 
+    // Responsive spacing — squeeze everything to fit inside the panel
+    const compact = panelH < 350;
+    const gap = compact ? 4 : 10;
+    const titleSize = compact ? 18 : 22;
+    const labelSize = compact ? 13 : 16;
+    const nameBoxH = compact ? 32 : 40;
+
     // Title
+    let py = panelY + (compact ? 12 : 24);
     this._editOverlayObjects.push(
-      this.add.text(cx, panelY + 24, 'Edit Profile', {
-        fontSize: '22px',
+      this.add.text(cx, py, 'Edit Profile', {
+        fontSize: `${titleSize}px`,
         fontFamily: 'Arial, sans-serif',
         color: '#ffffff',
         fontStyle: 'bold',
@@ -206,25 +214,26 @@ export class LobbyScene extends Phaser.Scene {
     );
 
     // ── Name input ─────────────────────────────────
+    py += titleSize + gap + 8;
     this._editOverlayObjects.push(
-      this.add.text(panelX + 20, panelY + 64, 'Name:', {
-        fontSize: '16px',
+      this.add.text(panelX + 20, py, 'Name:', {
+        fontSize: `${labelSize}px`,
         fontFamily: 'Arial, sans-serif',
         color: '#cccccc',
       })
     );
 
     // Name box (clickable to edit)
-    const nameBoxY = panelY + 88;
+    py += labelSize + gap;
+    const nameBoxY = py;
     const nameBoxW = panelW - 40;
-    const nameBoxH = 40;
     const nameBg = this.add.graphics();
     nameBg.fillStyle(0x333333, 1);
     nameBg.fillRoundedRect(panelX + 20, nameBoxY, nameBoxW, nameBoxH, 8);
     this._editOverlayObjects.push(nameBg);
 
     this._editNameText = this.add.text(panelX + 30, nameBoxY + nameBoxH / 2, this.profile.name, {
-      fontSize: '18px',
+      fontSize: `${compact ? 15 : 18}px`,
       fontFamily: 'Arial, sans-serif',
       color: '#ffffff',
     }).setOrigin(0, 0.5);
@@ -241,18 +250,20 @@ export class LobbyScene extends Phaser.Scene {
     this._editOverlayObjects.push(nameZone);
 
     // ── Avatar grid ────────────────────────────────
+    py = nameBoxY + nameBoxH + gap + 4;
     this._editOverlayObjects.push(
-      this.add.text(panelX + 20, panelY + 148, 'Avatar:', {
-        fontSize: '16px',
+      this.add.text(panelX + 20, py, 'Avatar:', {
+        fontSize: `${labelSize}px`,
         fontFamily: 'Arial, sans-serif',
         color: '#cccccc',
       })
     );
 
+    py += labelSize + gap;
     const gridStartX = panelX + 30;
-    const gridStartY = panelY + 176;
-    const cellSize = 44;
-    const cols = Math.min(6, Math.floor((panelW - 60) / cellSize));
+    const gridStartY = py;
+    const cellSize = compact ? 34 : 44;
+    const cols = Math.min(compact ? 8 : 6, Math.floor((panelW - 60) / cellSize));
 
     AVATARS.forEach((emoji, i) => {
       const col = i % cols;
@@ -269,7 +280,7 @@ export class LobbyScene extends Phaser.Scene {
       this._editOverlayObjects.push(highlight);
 
       const txt = this.add.text(ax, ay, emoji, {
-        fontSize: '28px',
+        fontSize: `${compact ? 20 : 28}px`,
       }).setOrigin(0.5);
       this._editOverlayObjects.push(txt);
 
@@ -289,9 +300,9 @@ export class LobbyScene extends Phaser.Scene {
     // directly over the button area. When you tap "Upload Photo", you're
     // actually tapping the real file input — Safari trusts that.
     const rows = Math.ceil(AVATARS.length / cols);
-    const uploadY = gridStartY + rows * cellSize + 16;
+    const uploadY = gridStartY + rows * cellSize + (compact ? 6 : 16);
     const uploadW = Math.min(200, panelW - 60);
-    const uploadH = 38;
+    const uploadH = compact ? 30 : 38;
 
     // Draw the visual button on canvas
     const uploadObjs = this._makeButton(cx, uploadY, uploadW, uploadH, 'Upload Photo', '#555555', () => {});
@@ -301,8 +312,9 @@ export class LobbyScene extends Phaser.Scene {
     this._createFileInput(cx - uploadW / 2, uploadY, uploadW, uploadH);
 
     // ── Save button ────────────────────────────────
-    const saveY = uploadY + 56;
-    const saveObjs = this._makeButton(cx, saveY, Math.min(200, panelW - 60), 44, 'Save', '#22aa22', () => {
+    const saveY = uploadY + uploadH + (compact ? 6 : 18);
+    const saveH = compact ? 34 : 44;
+    const saveObjs = this._makeButton(cx, saveY, Math.min(200, panelW - 60), saveH, 'Save', '#22aa22', () => {
       this.profile.save();
       this._closeEditOverlay();
       this._refreshBadge();
@@ -643,7 +655,7 @@ export class LobbyScene extends Phaser.Scene {
 
     // Leave button — bottom-left so you can go back to the menu
     const leaveObjs = this._makeButton(
-      90, sh * 0.88, 120, 40, '← Leave', '#aa3333', () => this._leaveLobby()
+      90, sh * 0.82, 120, Math.min(40, sh * 0.1), '← Leave', '#aa3333', () => this._leaveLobby()
     );
     this._lobbyObjects.push(...leaveObjs);
 
