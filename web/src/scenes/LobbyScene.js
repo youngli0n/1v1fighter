@@ -284,13 +284,21 @@ export class LobbyScene extends Phaser.Scene {
     });
 
     // ── Upload photo button ────────────────────────
+    // On iPad Safari, file inputs only work when the user taps a REAL
+    // HTML element (not a canvas click). So we place an invisible <input>
+    // directly over the button area. When you tap "Upload Photo", you're
+    // actually tapping the real file input — Safari trusts that.
     const rows = Math.ceil(AVATARS.length / cols);
     const uploadY = gridStartY + rows * cellSize + 16;
+    const uploadW = Math.min(200, panelW - 60);
+    const uploadH = 38;
 
-    const uploadObjs = this._makeButton(cx, uploadY, Math.min(200, panelW - 60), 38, 'Upload Photo', '#555555', () => {
-      this._handlePhotoUpload();
-    });
+    // Draw the visual button on canvas
+    const uploadObjs = this._makeButton(cx, uploadY, uploadW, uploadH, 'Upload Photo', '#555555', () => {});
     this._editOverlayObjects.push(...uploadObjs);
+
+    // Place a real HTML file input on top of the button
+    this._createFileInput(cx - uploadW / 2, uploadY, uploadW, uploadH);
 
     // ── Save button ────────────────────────────────
     const saveY = uploadY + 56;
@@ -305,14 +313,37 @@ export class LobbyScene extends Phaser.Scene {
   _closeEditOverlay() {
     this._editOverlayObjects.forEach(obj => obj.destroy());
     this._editOverlayObjects = [];
+    this._removeFileInput();
   }
 
-  _handlePhotoUpload() {
-    // Create a hidden file input and click it
+  /**
+   * Creates a real HTML <input type="file"> and positions it on top
+   * of the "Upload Photo" button. This is the only reliable way to
+   * open the photo picker on iPad Safari.
+   */
+  _createFileInput(x, y, w, h) {
+    // Remove any old file input
+    this._removeFileInput();
+
     const input = document.createElement('input');
     input.type = 'file';
     input.accept = 'image/*';
-    input.onchange = (e) => {
+    input.id = 'avatar-upload';
+
+    // Make it cover the button area but be invisible
+    input.style.cssText = `
+      position: fixed;
+      left: ${x}px;
+      top: ${y}px;
+      width: ${w}px;
+      height: ${h}px;
+      opacity: 0;
+      z-index: 9999;
+      cursor: pointer;
+      font-size: 0;
+    `;
+
+    input.addEventListener('change', (e) => {
       const file = e.target.files[0];
       if (!file) return;
 
@@ -331,15 +362,22 @@ export class LobbyScene extends Phaser.Scene {
           const sy = (img.height - size) / 2;
           ctx.drawImage(img, sx, sy, size, size, 0, 0, 64, 64);
           this.profile.avatar = canvas.toDataURL('image/jpeg', 0.7);
-          // Refresh the overlay
+          // Refresh the overlay to show the new photo
           this._closeEditOverlay();
           this._showEditOverlay();
         };
         img.src = event.target.result;
       };
       reader.readAsDataURL(file);
-    };
-    input.click();
+    });
+
+    document.body.appendChild(input);
+  }
+
+  /** Remove the HTML file input when we close the overlay */
+  _removeFileInput() {
+    const old = document.getElementById('avatar-upload');
+    if (old) old.remove();
   }
 
   _refreshBadge() {
